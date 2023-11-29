@@ -1,6 +1,7 @@
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.db.models.signals import post_save, pre_save
 # Create your models here.
 
 class UserManager(BaseUserManager):
@@ -62,3 +63,49 @@ class User(AbstractBaseUser):
         elif self.role == 2:
             user_role = 'USER'
         return user_role
+    
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    USER_CHOICES = (
+        ('FINANCE HEAD', 'FINANCE HEAD'),
+        ('CS HEAD', 'CS HEAD'),
+        ('RECOVERY HEAD', 'RECOVER HEAD'),
+        ('RECOVERY AGENT', 'RECOVERY AGENT'),
+        ('FINANCE HEAD','FINANCE HEAD'),
+    )
+    full_name = models.CharField(max_length=50)
+    email = models.EmailField(max_length=100, unique=False, default="")
+    u_type =models.CharField(max_length=40, choices=USER_CHOICES, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return str(self.user.phone_number)
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+    
+    
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import User, UserProfile
+
+
+@receiver(post_save, sender=User)
+def post_save_create_profile_receiver(sender, instance, created, **kwargs):
+    print(created)
+    if created:
+        UserProfile.objects.create(user=instance)
+    else:
+        try:
+            profile = UserProfile.objects.get(user=instance)
+            profile.save()
+        except:
+            # Create the userprofile if not exist
+            UserProfile.objects.create(user=instance)
+            
+
+@receiver(pre_save, sender=User)
+def pre_save_profile_receiver(sender, instance, **kwargs):
+    pass
