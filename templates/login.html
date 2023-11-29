@@ -11,7 +11,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
     <!-- App favicon -->
-    <link rel="shortcut icon" href="assets/images/favicon.ico">
+    <link rel="shortcut icon" href="{% static "img/smslogo.ico" %}">
 
     <!-- App css -->
     <link href="{% static "assets/css/bootstrap.min.css" %}" rel="stylesheet" type="text/css" />
@@ -34,7 +34,8 @@
                                     <div class="p-5">
                                         <div class="text-center mb-5">
                                             <a href="index.html" class="text-dark font-size-22 font-family-secondary">
-                                                <i class="mdi mdi-alpha-x-circle"></i> <b>Sparrow SOS</b>
+                                                <img src="{% static "img/smslogo.ico" %}" alt="Custom Icon" class="custom-icon">
+                                                 <b>Sparrow SOS</b>
                                             </a>
                                         </div>
                                         <div class="row">

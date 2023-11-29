@@ -49,7 +49,7 @@ def login(request):
 def logout(request):
    auth.logout(request)
    messages.info(request, 'You are logged out.')
-   return redirect('account:login')
+   return redirect('login')
 
 @login_required(login_url='account:login')
 #Dashboard Assign
