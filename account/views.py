@@ -55,10 +55,8 @@ def logout(request):
    messages.info(request, 'You are logged out.')
    return redirect('login')
 
-@login_required(login_url='account:login')
-
-
 #Dashboard Assign
+@login_required(login_url='account:login')
 def myAccount(request):
     user = request.user
     redirectUrl = detectUser(user)
