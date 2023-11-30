@@ -35,7 +35,7 @@
                                 <div class="col-lg-7">
                                     <div class="p-5">
                                         <div class="text-center mb-5">
-                                            <a href="index.html" class="text-dark font-size-22 font-family-secondary">
+                                            <a href="{% url 'login' %}" class="text-dark font-size-22 font-family-secondary">
                                                 <img src="{% static "img/smslogo.ico" %}" alt="Custom Icon" class="custom-icon">
                                                  <b>Sparrow SOS</b>
                                             </a>
@@ -65,8 +65,8 @@
 
                                         <div class="row mt-4">
                                             <div class="col-12 text-center">
-                                                <p class="text-muted mb-2"><a href="pages-recoverpw.html" class="text-muted font-weight-medium ml-1">Forgot your password?</a></p>
-                                                <p class="text-muted mb-0">Don't have an account? <a href="pages-register.html" class="text-muted font-weight-medium ml-1"><b>Sign Up</b></a></p>
+                                                <p class="text-muted mb-2"><a href="{% url 'account:forgot_password' %}" class="text-muted font-weight-medium ml-1">Forgot your password?</a></p>
+                                                
                                             </div> <!-- end col -->
                                         </div>
                                         <!-- end row -->

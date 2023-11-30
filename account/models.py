@@ -73,7 +73,7 @@ class UserProfile(models.Model):
         ('RECOVERY AGENT', 'RECOVERY AGENT'),
         ('FINANCE HEAD','FINANCE HEAD'),
     )
-    full_name = models.CharField(max_length=50)
+    full_name = models.CharField(max_length=50,blank=True)
     email = models.EmailField(max_length=100, unique=False, default="")
     u_type =models.CharField(max_length=40, choices=USER_CHOICES, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -82,9 +82,7 @@ class UserProfile(models.Model):
     def __str__(self):
         return str(self.user.phone_number)
 
-    @property
-    def full_name(self):
-        return f"{self.first_name} {self.last_name}"
+    
     
     
 from django.db.models.signals import post_save
