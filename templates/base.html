@@ -16,6 +16,8 @@
 
         <!-- App css -->
         <link href="{% static "assets/css/bootstrap.min.css" %}" rel="stylesheet" type="text/css" />
+        <link href="{% static "assets/css/theme.css" %}" rel="stylesheet" type="text/css" />
+        <link href="{% static "assets/css/icons.css" %}" rel="stylesheet" type="text/css" />
         <link href="{% static "assets/css/icons.min.css"  %}"  rel="stylesheet" type="text/css" />
         <link href="{% static "assets/css/theme.min.css" %}" rel="stylesheet" type="text/css" />
 
@@ -77,7 +79,7 @@
                             <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right p-0"
                                 aria-labelledby="page-header-search-dropdown">
 
-                                <form class="p-3">
+                                <form >
                                     <div class="form-group m-0">
                                         <div class="input-group">
                                             <input type="text" class="form-control" placeholder="Search ..."
@@ -92,40 +94,7 @@
                             </div>
                         </div>
 
-                        <div class="dropdown d-inline-block">
-                            <button type="button" class="btn header-item waves-effect"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <img class="" src="assets/images/flags/us.jpg" alt="Header Language" height="16">
-                                <span class="d-none d-sm-inline-block ml-1">English</span>
-                                <i class="mdi mdi-chevron-down d-none d-sm-inline-block"></i>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-right">
-
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                    <img src="assets/images/flags/spain.jpg" alt="user-image" class="mr-1" height="12">
-                                    <span class="align-middle">Spanish</span>
-                                </a>
-
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                    <img src="assets/images/flags/germany.jpg" alt="user-image" class="mr-1" height="12">
-                                    <span class="align-middle">German</span>
-                                </a>
-
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                    <img src="assets/images/flags/italy.jpg" alt="user-image" class="mr-1" height="12">
-                                    <span class="align-middle">Italian</span>
-                                </a>
-
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                    <img src="assets/images/flags/russia.jpg" alt="user-image" class="mr-1" height="12">
-                                    <span class="align-middle">Russian</span>
-                                </a>
-                            </div>
-                        </div>
+                        
 
                         <div class="dropdown d-inline-block">
                             <button type="button" class="btn header-item noti-icon waves-effect"
@@ -223,12 +192,9 @@
                                     href="javascript:void(0)">
                                     Settings
                                 </a>
+                               
                                 <a class="dropdown-item d-flex align-items-center justify-content-between"
-                                    href="javascript:void(0)">
-                                    <span>Lock Account</span>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center justify-content-between"
-                                    href="javascript:void(0)">
+                                    href="{% url 'account:logout' %}">
                                     <span>Log Out</span>
                                 </a>
                             </div>

@@ -344,6 +344,7 @@ body.enable-vertical-menu .menu-overlay {
 .noti-icon .badge {
   position: absolute;
   top: 12px;
+  left: 1px;
 }
 
 .notification-item .media {
@@ -1525,7 +1526,7 @@ div.dt-button-info h2 {
 
 /* 19. Auth*/
 .bg-login {
-  background: url("../images/bg-login.jpg");
+  background: url("../images/Sparrow_PR.png");
   background-position: center;
   background-size: cover;
 }
