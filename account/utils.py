@@ -5,7 +5,7 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from django.conf import settings
-from .models import User, UserProfile
+from .models import User
 
 def detectUser(user):
     if user.role == User.ADMIN:
@@ -24,14 +24,13 @@ def detectUser(user):
 def send_verification_email(request, user, mail_subject, email_template):
     from_email = settings.DEFAULT_FROM_EMAIL
     current_site = get_current_site(request)
-    user_profile = UserProfile.objects.get(user=user)
     message = render_to_string(email_template, {
-        'user': user_profile,
+
         'domain': current_site.domain,
         'uid': urlsafe_base64_encode(force_bytes(user.pk)),
         'token': default_token_generator.make_token(user),
     })
-    to_email = user_profile.email
+    to_email = user.email
     mail = EmailMessage(mail_subject, message, from_email, to=[to_email])
     mail.content_subtype = "html"
     mail.send()

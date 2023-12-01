@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from .utils import detectUser
 from django.core.exceptions import PermissionDenied
 from django.utils.http import urlsafe_base64_decode
-from .models import User,UserProfile
+from .models import User
 from .utils import detectUser, send_verification_email
 from django.contrib.auth.tokens import default_token_generator
 # Create your views here.
@@ -44,7 +44,7 @@ def login(request):
             return redirect('account:myAccount')
         else:
             messages.error(request, 'Invalid login credentials')
-            return redirect('account:login')
+            return redirect('login')
 
     return render(request, 'login.html')
 
@@ -80,9 +80,9 @@ def forgot_password(request):
     if request.method == 'POST':
         email = request.POST['email']
 
-        if UserProfile.objects.filter(email=email).exists():
-            user_profile = UserProfile.objects.get(email=email)
-            user = user_profile.user
+        if User.objects.filter(email=email).exists():
+            
+            user =  User.objects.get(email=email)
 
             # send reset password email
             mail_subject = 'Reset Your Password'
