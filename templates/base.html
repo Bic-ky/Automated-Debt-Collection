@@ -76,14 +76,14 @@
                         <div class="dropdown d-inline-block ml-2">
                             <button type="button" class="btn header-item waves-effect"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="d-none d-sm-inline-block ml-1"> {{user.userprofile.full_name}}</span>
+                                <span class="d-none d-sm-inline-block ml-1"> {{user.full_name}}</span>
                                 <i class="mdi mdi-chevron-down d-none d-sm-inline-block"></i>
                             </button>
                             <div class="dropdown-menu dropdown-menu-right">
                                
                                 <a class="dropdown-item d-flex align-items-center justify-content-between"
-                                    href="javascript:void(0)">
-                                    Settings
+                                    href="{% url "profile" %}">
+                                    Profile
                                 </a>
                                
                                 <a class="dropdown-item d-flex align-items-center justify-content-between"
@@ -154,9 +154,6 @@
                                     <span>Pages</span></a>
                                 
                             </li>
-
-                            <li><a href="calendar.html" class=" waves-effect"><i
-                                        class="mdi mdi-calendar-range-outline"></i><span>Calendar</span></a></li>
 
                             <li>
                                 <a href="#" class="waves-effect"><i
