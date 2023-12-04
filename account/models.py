@@ -38,9 +38,9 @@ class User(AbstractBaseUser):
     USER_CHOICES = (
         ('FINANCE HEAD', 'FINANCE HEAD'),
         ('CS HEAD', 'CS HEAD'),
-        ('RECOVERY HEAD', 'RECOVER HEAD'),
+        ('RECOVERY HEAD', 'RECOVER HEAD'),  
         ('RECOVERY AGENT', 'RECOVERY AGENT'),
-        ('FINANCE HEAD','FINANCE HEAD'),
+        ('FINANCE CLERK','FINANCE CLERK'),
     )
     full_name = models.CharField(max_length=50,blank=True)
     email = models.EmailField(max_length=100, unique=False, default="")
