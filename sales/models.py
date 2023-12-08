@@ -23,3 +23,27 @@ class Client(models.Model):
             return self.short_name
         else:
             return f"Client {self.pk}"  # You can customize this fallback representation
+        
+
+
+class Bill(models.Model):
+    type = models.CharField(max_length=40,blank=True,null=True)
+    bill_no = models.CharField(max_length=40, blank=True)
+    date = models.DateField(null=True, blank=True)
+    due_date = models.DateField(null=True, blank=True)
+    days = models.IntegerField(null=True, blank=True)
+    inv_amount = models.FloatField(null=True, blank=True)
+    cycle1 = models.FloatField(null=True, blank=True)
+    cycle2 = models.FloatField(null=True, blank=True)
+    cycle3 = models.FloatField(null=True, blank=True)
+    cycle4 = models.FloatField(null=True, blank=True)
+    cycle5 = models.FloatField(null=True, blank=True)
+    cycle6 = models.FloatField(null=True, blank=True)
+    cycle7 = models.FloatField(null=True, blank=True)
+    cycle8 = models.FloatField(null=True, blank=True)
+    cycle9 = models.FloatField(null=True, blank=True)
+    balance = models.FloatField(null=True, blank=True)
+    short_name = models.ForeignKey(Client, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.short_name}"

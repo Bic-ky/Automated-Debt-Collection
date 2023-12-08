@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Page Title</title>
+    <!-- Add your CSS links or styles here -->
+</head>
+
+<body>
+    <header>
+        <h1>Your Website Name</h1>
+        <!-- Add navigation or header content here -->
+    </header>
+
+    <main>
+        <h1>File Upload</h1>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="myfile">
+            <button type="submit">Upload</button>
+          </form> 
+    </main>
+
+    <footer>
+        <!-- Your footer content goes here -->
+        <p>&copy; 2023 Your Website Name. All rights reserved.</p>
+    </footer>
+
+    <!-- Add your scripts or script links here -->
+</body>
+
+</html>
