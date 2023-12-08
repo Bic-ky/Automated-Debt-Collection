@@ -18,9 +18,9 @@
         <h1>File Upload</h1>
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            <input type="file" name="myfile">
+            {{ form }}
             <button type="submit">Upload</button>
-          </form> 
+        </form>
     </main>
 
     <footer>

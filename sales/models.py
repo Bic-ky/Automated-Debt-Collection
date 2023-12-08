@@ -46,4 +46,5 @@ class Bill(models.Model):
     short_name = models.ForeignKey(Client, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.short_name}"
+        account_name = self.short_name.account_name if self.short_name else None
+        return account_name or f"Bill {self.pk}"  # You can customize this fallback representation
