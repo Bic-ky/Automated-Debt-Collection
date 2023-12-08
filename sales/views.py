@@ -53,8 +53,8 @@ def upload_excel(request):
                     print(f"Validation error at row {index + 2}: {e}")
                     # Optionally, you can log the error or take other appropriate actions
 
-            return redirect('success')  # Redirect to a success page
+            return redirect('upload_excel')  # Redirect to a success page
     else:
         form = ExcelUploadForm()
-    return render(request, 'upload_excel.html', {'form': form})
+    return render(request, 'upload.html', {'form': form})
 
