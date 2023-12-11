@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="col-xl-4">
+    <div class="col-xl-12">
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">Upload file</h4>
@@ -9,7 +9,7 @@
                     {% csrf_token %}
                     {{ form }}
                     <br>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="submit" class="btn btn-primary">Upload</button>
                 </form>
             </div> <!-- end card-body-->
         </div> <!-- end card-->
