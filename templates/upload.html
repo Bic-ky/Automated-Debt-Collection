@@ -1,23 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
-       
-            
-          
-        
-
-
-        <div class="col-xl-4">
-            <div class="card">
-                <div class="card-body">
-    
-                    <h4 class="card-title">Upload file</h4>
-                    <form method="post" enctype="multipart/form-data">
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Upload file</h4>
+                <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     {{ form }}
+                    <br>
+                    <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
-        
-                </div> <!-- end card-body-->
-            </div> <!-- end card-->
-        </div> <!-- end col -->
+            </div> <!-- end card-body-->
+        </div> <!-- end card-->
+    </div> <!-- end col -->
+    {% include "alerts.html" %}
 {% endblock content %}
