@@ -225,9 +225,6 @@
         <script src="{% static "assets/js/waves.js" %}"></script>
         <script src="{% static "assets/js/simplebar.min.js" %}"></script>
 
-                <!-- Include jQuery from CDN -->
-        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-
         <!-- Drofiy Js -->
         <script src="{% static 'assets/plugins/dropify/dropify.min.js' %}"></script>
 
@@ -239,6 +236,11 @@
             });
         </script>
 
+        <script>
+            $(document).ready(function() {
+                $('#exampleModalScrollable').modal('show');
+            });
+        </script>
 
         <!-- Sparkline Js-->
         <script src="{% static "plugins/jquery-sparkline/jquery.sparkline.min.js" %}"></script>
@@ -261,6 +263,8 @@
 
         <!-- App js -->
         <script src="{% static "assets/js/theme.js" %}"></script>
+
+        
 
     </body>
 

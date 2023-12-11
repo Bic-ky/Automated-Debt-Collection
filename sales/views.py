@@ -124,6 +124,32 @@ def upload_excel(request):
                         short_name_value = row['short_name'].strip()
                         client = clients.get(short_name=short_name_value)
 
+                        # Check if a Bill with the same data already exists
+                        existing_bill = Bill.objects.filter(
+                            type=row['type'],
+                            bill_no=row['bill_no'],
+                            date=row['date'],
+                            due_date=row['due_date'],
+                            days=row['days'],
+                            inv_amount=row['inv_amount'],
+                            cycle1=row['cycle1'],
+                            cycle2=row['cycle2'],
+                            cycle3=row['cycle3'],
+                            cycle4=row['cycle4'],
+                            cycle5=row['cycle5'],
+                            cycle6=row['cycle6'],
+                            cycle7=row['cycle7'],
+                            cycle8=row['cycle8'],
+                            cycle9=row['cycle9'],
+                            balance=row['balance'],
+                            short_name=client,
+                        ).first()
+
+                        if existing_bill:
+                            # Skip creating a new Bill if an identical one already exists
+                            continue
+
+                        # Create a new Bill instance
                         Bill.objects.create(
                             type=row['type'],
                             bill_no=row['bill_no'],
@@ -164,9 +190,3 @@ def upload_excel(request):
         messages.error(request, error_message)
 
     return render(request, 'upload.html', {'form': form})
-
-
-
-
-
-
