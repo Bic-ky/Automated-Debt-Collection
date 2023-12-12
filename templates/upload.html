@@ -11,6 +11,15 @@
                     <br>
                     <button type="submit" class="btn btn-primary">Upload</button>
                 </form>
+                <br>
+                {% if error_message %}
+                    <div class="alert alert-danger show-notification" role="alert">
+                        <strong>{{ error_message }}</strong>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endif %}
             </div> <!-- end card-body-->
         </div> <!-- end card-->
     </div> <!-- end col -->

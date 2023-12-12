@@ -1,5 +1,6 @@
 from django.forms import ValidationError
 from django.shortcuts import render
+from django.urls import reverse
 from . models import Client,Bill
 from .resources import BillResource
 from django.contrib import messages
@@ -7,6 +8,9 @@ from tablib import Dataset
 from .forms import ExcelUploadForm  
 from django.core.exceptions import ValidationError
 import pandas as pd
+from IPython.display import FileLink
+from django.http import FileResponse, HttpResponse
+from django.core.files.storage import default_storage
 # Create your views here.
 def profile(request):
     return render(request , 'profile.html')
@@ -14,6 +18,7 @@ def profile(request):
 def upload_excel(request):
     success_messages = []
     error_messages = []
+    download_link = None  # Initialize download_link
 
     if request.method == 'POST':
         form = ExcelUploadForm(request.POST, request.FILES)
@@ -38,7 +43,7 @@ def upload_excel(request):
                 if not all(col in df.columns for col in expected_columns):
                     error_message = 'Wrong format file. Please make sure all required columns are present.'
                     error_messages.append(error_message)
-                    print(error_messages)  # Make sure the error message is printed in the console
+                    print(error_messages)  
                     return render(request, 'upload.html', {'form': form, 'error_message': error_message})
                 
                 # Replace "Type" column with "1" where "Bill No." contains "Ledger =>"
@@ -113,6 +118,12 @@ def upload_excel(request):
                 # Rename columns
                 df = df.rename(columns=column_mapping)
 
+                # Assuming df is your DataFrame
+                df.to_excel('sorted_aging_report.xlsx', index=False)
+
+                # Create a link to download the file
+                FileLink('sorted_aging_report.xlsx')
+
                 # Fetch all clients at once
                 short_names = df['short_name'].astype(str).str.strip().unique()
                 clients = Client.objects.filter(short_name__in=short_names)
@@ -174,14 +185,23 @@ def upload_excel(request):
                         error_messages.append(f'Client "{short_name_value}" not found at row {index + 2}\n')
                     except ValidationError as e:
                         error_messages.append(f'Validation error at row {index + 2}: {e}\n')
-
+                
+                
                 if success_count > 0:
                     success_messages.append(f"{success_count} records successfully uploaded.")
+                    download_link = reverse('download_excel')
+                else:
+                    download_link = None
 
             except Exception as e:
                 error_messages.append(f'Error processing Excel file: {e}')
     else:
         form = ExcelUploadForm()
+
+    context = {
+        'form': form,
+        'download_link': download_link,
+    }
 
     for success_message in success_messages:
         messages.success(request, success_message)
@@ -189,4 +209,15 @@ def upload_excel(request):
     for error_message in error_messages:
         messages.error(request, error_message)
 
-    return render(request, 'upload.html', {'form': form})
+    return render(request, 'upload.html', context)
+
+
+def download_excel(request):
+    file_path = 'sorted_aging_report.xlsx'
+    if default_storage.exists(file_path):
+        with default_storage.open(file_path, 'rb') as excel_file:
+            response = HttpResponse(excel_file.read(), content_type='application/vnd.ms-excel')
+            response['Content-Disposition'] = f'attachment; filename="{file_path}"'
+            return response
+    else:
+        return HttpResponse("File not found", status=404)
