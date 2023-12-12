@@ -29,12 +29,9 @@ def upload_excel(request):
                 # Skip the first 3 rows
                 df = excel_data.iloc[3:]
                 
-            
                 # Set the 0th row data as column headings
                 df.columns = df.iloc[0]
                 
-                
-          
                 # Check if the expected columns are present
                 expected_columns = ['Type', 'Bill No.', 'Date', 'Due Date', 'Days', 'Inv.Amt', '0 - 15',
                                     '16 - 30', '31 - 45', '46 - 60', '61 - 75', '76 - 90', '91 - 105',
@@ -221,3 +218,7 @@ def download_excel(request):
             return response
     else:
         return HttpResponse("File not found", status=404)
+    
+
+def client(request):
+    return render(request , 'client.html')
