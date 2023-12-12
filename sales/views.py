@@ -11,6 +11,9 @@ import pandas as pd
 from IPython.display import FileLink
 from django.http import FileResponse, HttpResponse
 from django.core.files.storage import default_storage
+from pyBSDate import bsdate, convert_BS_to_AD
+
+
 # Create your views here.
 def profile(request):
     return render(request , 'profile.html')
@@ -131,6 +134,14 @@ def upload_excel(request):
                     try:
                         short_name_value = row['short_name'].strip()
                         client = clients.get(short_name=short_name_value)
+
+                        
+                        # Convert BS dates to AD dates
+                        bs_date = convert_BS_to_AD(row['date'].year, row['date'].month, row['date'].day)
+                        row['date'] = bsdate(int(bs_date[0]), int(bs_date[1]), int(bs_date[2])).strftime('%Y-%m-%d')
+
+                        bs_due_date = convert_BS_to_AD(row['due_date'].year, row['due_date'].month, row['due_date'].day)
+                        row['due_date'] = bsdate(int(bs_due_date[0]), int(bs_due_date[1]), int(bs_due_date[2])).strftime('%Y-%m-%d')
 
                         # Check if a Bill with the same data already exists
                         existing_bill = Bill.objects.filter(
