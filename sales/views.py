@@ -271,4 +271,5 @@ def client(request):
 
 def client_profile(request, client_id):
     client = get_object_or_404(Client, id=client_id)
-    return render(request, 'client_profile.html', {'client': client})
+    bills = client.bill_set.all()  # Assuming you have a related name 'bill_set' in your Client model
+    return render(request, 'client_profile.html', {'client': client, 'bills': bills})
