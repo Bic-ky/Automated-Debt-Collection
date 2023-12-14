@@ -15,6 +15,7 @@ from django.core.files.storage import default_storage
 from pandas.errors import EmptyDataError
 from nepali_date_converter import english_to_nepali_converter, nepali_to_english_converter
 from django.db.models import Sum
+from decimal import Decimal
 
 # Create your views here.
 def profile(request):
@@ -251,18 +252,19 @@ def download_excel(request):
     
 
 
-
 def update_client_balance(client):
     # Get the sum of all cycles for the client's bills
     total_cycles_sum = Bill.objects.filter(short_name=client).aggregate(
         total_cycles_sum=Sum('cycle1') + Sum('cycle2') + Sum('cycle3') + Sum('cycle4') + Sum('cycle5') +
                         Sum('cycle6') + Sum('cycle7') + Sum('cycle8') + Sum('cycle9')
-    )['total_cycles_sum'] or 0
+    )['total_cycles_sum'] or Decimal('0.00')
+
+    # Round the total_cycles_sum to two decimal places
+    total_cycles_sum = round(total_cycles_sum, 2)
 
     # Update the balance field in the Client model
     client.balance = total_cycles_sum
     client.save()
-
 def collection(request):
     actions = Action.objects.all() 
     context = {'actions': actions}

@@ -6,7 +6,13 @@ class Client(models.Model):
     account_name = models.CharField(max_length=255, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
     pan_number = models.CharField(max_length=20, null=True, blank=True)
-    balance = models.FloatField(null=True, blank=True)
+    balance = models.DecimalField(
+        max_digits=10,  
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
     phone_number = models.CharField(max_length=15, null=True, blank=True)
     email=models.EmailField(null=True,blank=True)
     contact_name = models.CharField(max_length=255, null=True, blank=True)
