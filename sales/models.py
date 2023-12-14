@@ -47,3 +47,19 @@ class Bill(models.Model):
     def __str__(self):
         account_name = self.short_name.account_name if self.short_name else None
         return account_name or f"Bill {self.pk}"  # You can customize this fallback representation
+    
+class Action(models.Model):
+    action_date=models.DateField()
+    TYPE_CHOICES = (
+        ('auto','auto'),
+        ('manual','manual'),
+        )
+    type =models.CharField(max_length=20, choices=TYPE_CHOICES)
+    ACTION_CHOICES = (
+        ('sms','sms'),
+        ('email','email'),
+        ('call','call'),  
+        )
+    action_type =models.CharField(max_length=20, choices=ACTION_CHOICES)
+    action_amount= models.FloatField()
+    short_name = models.ForeignKey(Client, on_delete=models.CASCADE)

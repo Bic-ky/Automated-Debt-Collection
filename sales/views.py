@@ -2,7 +2,7 @@ from django.forms import ValidationError
 from datetime import datetime
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from . models import Client,Bill
+from . models import Client,Bill,Action
 from .resources import BillResource
 from django.contrib import messages
 from tablib import Dataset
@@ -14,6 +14,8 @@ from django.http import FileResponse, HttpResponse
 from django.core.files.storage import default_storage
 from pandas.errors import EmptyDataError
 from nepali_date_converter import english_to_nepali_converter, nepali_to_english_converter
+from django.db.models import Sum
+
 # Create your views here.
 def profile(request):
     return render(request , 'profile.html')
@@ -174,35 +176,17 @@ def upload_excel(request):
                 clients = Client.objects.filter(short_name__in=short_names)
 
                 success_count = 0
-
+                
+                # Delete all existing Bill instances
+                Bill.objects.all().delete()
+                
+                
+                
                 for index, row in df.iterrows():
                     try:
                         short_name_value = row['short_name'].strip()
                         client = clients.get(short_name=short_name_value)
-
-                        # Check if a Bill with the same data already exists
-                        existing_bill = Bill.objects.filter(
-                            type=row['type'],
-                            bill_no=row['bill_no'],
-                            due_date=row['due_date'],
-                            inv_amount=row['inv_amount'],
-                            cycle1=row['cycle1'],
-                            cycle2=row['cycle2'],
-                            cycle3=row['cycle3'],
-                            cycle4=row['cycle4'],
-                            cycle5=row['cycle5'],
-                            cycle6=row['cycle6'],
-                            cycle7=row['cycle7'],
-                            cycle8=row['cycle8'],
-                            cycle9=row['cycle9'],
-                            balance=row['balance'],
-                            short_name=client,
-                        ).first()
-
-                        if existing_bill:
-                            # Skip creating a new Bill if an identical one already exists
-                            continue
-
+                        
                         # Create a new Bill instance
                         Bill.objects.create(
                             type=row['type'],
@@ -222,6 +206,8 @@ def upload_excel(request):
                             short_name=client,
                         )
                         success_count += 1
+                        # Call the function to update the client's balance after each Bill creation
+                        update_client_balance(client)
                     except Client.DoesNotExist:
                         error_messages.append(f'Client "{short_name_value}" not found at row {index + 2}\n')
                     except ValidationError as e:
@@ -264,6 +250,22 @@ def download_excel(request):
         return HttpResponse("File not found", status=404)
     
 
+
+
+def update_client_balance(client):
+    # Get the sum of all cycles for the client's bills
+    total_cycles_sum = Bill.objects.filter(short_name=client).aggregate(
+        total_cycles_sum=Sum('cycle1') + Sum('cycle2') + Sum('cycle3') + Sum('cycle4') + Sum('cycle5') +
+                        Sum('cycle6') + Sum('cycle7') + Sum('cycle8') + Sum('cycle9')
+    )['total_cycles_sum'] or 0
+
+    # Update the balance field in the Client model
+    client.balance = total_cycles_sum
+    client.save()
+
+
+
+
 def client(request):
     clients = Client.objects.all()
     return render(request , 'client.html' ,  {'clients': clients})
@@ -271,5 +273,4 @@ def client(request):
 
 def client_profile(request, client_id):
     client = get_object_or_404(Client, id=client_id)
-    bills = client.bill_set.all()  # Assuming you have a related name 'bill_set' in your Client model
-    return render(request, 'client_profile.html', {'client': client, 'bills': bills})
+    return render(request, 'client_profile.html', {'client': client})
