@@ -263,7 +263,10 @@ def update_client_balance(client):
     client.balance = total_cycles_sum
     client.save()
 
-
+def collection(request):
+    actions = Action.objects.all() 
+    context = {'actions': actions}
+    return render(request, 'collection.html', context)
 
 
 def client(request):

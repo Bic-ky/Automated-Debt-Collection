@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<div class="col-xl-12">
+    <div class="card">
+        <div class="card-body">
+
+            <h4 class="card-title">CLIENTS</h4>
+
+            <ul class="nav nav-tabs nav-justified mb-3">
+                <li class="nav-item">
+                    <a href="#manual" data-toggle="tab" aria-expanded="true" class="nav-link active">
+                        <i class="mdi mdi-home-variant d-lg-none d-block"></i>
+                        <span class="d-none d-lg-block">Manual Actions</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#automatic" data-toggle="tab" aria-expanded="false" class="nav-link ">
+                        <i class="mdi mdi-account-circle d-lg-none d-block"></i>
+                        <span class="d-none d-lg-block">Automatic Actions</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#allaction" data-toggle="tab" aria-expanded="false" class="nav-link ">
+                        <i class="mdi mdi-account-circle d-lg-none d-block"></i>
+                        <span class="d-none d-lg-block">Action History</span>
+                    </a>
+                </li>
+            </ul>
+        
+    <div class="tab-content">
+        <div class="tab-pane show active" id="manual">
+            <div class="row">
+                <div class="col-12">
+                        <div class="card-body">
+                            
+                            <table id="basic-datatable" class="table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Action Date</th>
+                                        <th>Action Type</th>
+                                        <th>Action</th>
+                                        <th>Action Amount</th>
+                                        <th>Client ID</th>
+                                        <th>Client Name</th>
+                                    </tr>
+                                </thead>
+                            
+                            
+                                <tbody>
+                                    {% for action in actions %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>{{ action.action_date }}</td>
+                                            <td>{{ action.action_type.name }}</td>  
+                                            <td>{{ action_type_display(action.action_type) }}</td>  
+                                            <td>{{ action.action_amount }}</td>
+                                            <td>{{ action.short_name.pk }}</td>  
+                                            <td>{{ action.short_name.account_name }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+            
+                        </div> <!-- end card body-->
+                 
+                </div><!-- end col-->
+            </div>
+            <!-- end row-->
+        
+        </div>
+        <div class="tab-pane " id="automatic">
+            <p>Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt.Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim.</p>
+            <p class="mb-0">Leggings occaecat dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.</p>
+        </div>
+        <div class="tab-pane" id="allaction">
+            <p>Food truck quinoa dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.</p>
+            <p class="mb-0">Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt.Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim.</p>
+        </div>
+    </div>
+        </div> <!-- end card-body-->
+    </div> <!-- end card-->
+</div> <!-- end col -->
+
+<!-- end row-->
+{% endblock content %}
