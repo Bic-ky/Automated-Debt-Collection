@@ -1,6 +1,6 @@
 from django.forms import ValidationError
 from datetime import datetime
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from . models import Client,Bill
 from .resources import BillResource
@@ -265,4 +265,10 @@ def download_excel(request):
     
 
 def client(request):
-    return render(request , 'client.html')
+    clients = Client.objects.all()
+    return render(request , 'client.html' ,  {'clients': clients})
+
+
+def client_profile(request, client_id):
+    client = get_object_or_404(Client, id=client_id)
+    return render(request, 'client_profile.html', {'client': client})
