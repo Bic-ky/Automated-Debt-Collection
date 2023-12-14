@@ -1,4 +1,5 @@
 from django.forms import ValidationError
+from datetime import datetime
 from django.shortcuts import render
 from django.urls import reverse
 from . models import Client,Bill
@@ -11,12 +12,40 @@ import pandas as pd
 from IPython.display import FileLink
 from django.http import FileResponse, HttpResponse
 from django.core.files.storage import default_storage
-from pyBSDate import bsdate, convert_BS_to_AD
-
-
+from pandas.errors import EmptyDataError
+from nepali_date_converter import english_to_nepali_converter, nepali_to_english_converter
 # Create your views here.
 def profile(request):
     return render(request , 'profile.html')
+
+def convert_date_format(input_date):
+    try:
+        # Check if the input_date is already a datetime object
+        if isinstance(input_date, datetime):
+            # If it is, return the formatted date as a string
+            return input_date.strftime('%Y/%m/%d')
+        
+        # If not, parse the input string and format it
+        input_datetime = datetime.strptime(str(input_date), '%Y-%m-%d %H:%M:%S')
+        output_date = input_datetime.strftime('%Y/%m/%d')
+        
+        return output_date
+    except ValueError:
+        # If parsing fails, assume the input is already in the desired format
+        return input_date
+
+def convert_nepali_to_ad(nepali_date):
+    try:
+        # Parse the Nepali date into year, month, and day
+        nepali_year, nepali_month, nepali_day = map(int, nepali_date.split('/'))
+
+        # Convert Nepali date to English date
+        english_date = nepali_to_english_converter(nepali_year, nepali_month, nepali_day)
+        return english_date
+    except Exception as e:
+        print(f"Error converting Nepali date: {e}")
+        return None  # or return the original value if conversion fails
+
 
 def upload_excel(request):
     success_messages = []
@@ -28,7 +57,7 @@ def upload_excel(request):
         if form.is_valid():
             try:
                 excel_data = pd.read_excel(request.FILES['file'])
-
+                
                 # Skip the first 3 rows
                 df = excel_data.iloc[3:]
                 
@@ -90,12 +119,26 @@ def upload_excel(request):
 
                 # Apply the lambda function to 'short_name' to remove leading zeros
                 df['short_name'] = df['short_name'].apply(lambda x: x.lstrip('0') if x[0].isdigit() else x)
+                
+                # Apply the convert_date_format function to 'Date' and 'Due Date' columns
+                df['Date'] = df['Date'].apply(convert_date_format)
 
+                # Copy 'Date' data to 'Due Date' column
+                df['Due Date'] = df['Date']                
+
+                # Apply the convert_nepali_to_ad function to the 'Date' column
+                df['Date'] = df['Date'].apply(convert_nepali_to_ad)
+                
+                # Apply the convert_nepali_to_ad function to the 'Due Date' column
+                df['Due Date'] = df['Due Date'].apply(convert_nepali_to_ad)
+                
+                #Delete the Date column
+                df.drop(columns=['Date'], inplace=True)
+                
                 # Define the new column names
                 new_column_names = [
                     'type',
                     'bill_no',
-                    'date',
                     'due_date',
                     'days',
                     'inv_amount',
@@ -135,21 +178,11 @@ def upload_excel(request):
                         short_name_value = row['short_name'].strip()
                         client = clients.get(short_name=short_name_value)
 
-                        
-                        # Convert BS dates to AD dates
-                        bs_date = convert_BS_to_AD(row['date'].year, row['date'].month, row['date'].day)
-                        row['date'] = bsdate(int(bs_date[0]), int(bs_date[1]), int(bs_date[2])).strftime('%Y-%m-%d')
-
-                        bs_due_date = convert_BS_to_AD(row['due_date'].year, row['due_date'].month, row['due_date'].day)
-                        row['due_date'] = bsdate(int(bs_due_date[0]), int(bs_due_date[1]), int(bs_due_date[2])).strftime('%Y-%m-%d')
-
                         # Check if a Bill with the same data already exists
                         existing_bill = Bill.objects.filter(
                             type=row['type'],
                             bill_no=row['bill_no'],
-                            date=row['date'],
                             due_date=row['due_date'],
-                            days=row['days'],
                             inv_amount=row['inv_amount'],
                             cycle1=row['cycle1'],
                             cycle2=row['cycle2'],
@@ -172,7 +205,6 @@ def upload_excel(request):
                         Bill.objects.create(
                             type=row['type'],
                             bill_no=row['bill_no'],
-                            date=row['date'],
                             due_date=row['due_date'],
                             days=row['days'],
                             inv_amount=row['inv_amount'],
