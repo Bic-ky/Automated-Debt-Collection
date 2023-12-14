@@ -31,7 +31,6 @@ class Bill(models.Model):
     type = models.CharField(max_length=40,blank=True,null=True)
     bill_no = models.CharField(max_length=40, blank=True)
     due_date = models.DateField(null=True, blank=True)
-    days = models.IntegerField(null=True, blank=True)
     inv_amount = models.FloatField(null=True, blank=True)
     cycle1 = models.FloatField(null=True, blank=True)
     cycle2 = models.FloatField(null=True, blank=True)

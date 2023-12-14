@@ -134,13 +134,15 @@ def upload_excel(request):
                 
                 #Delete the Date column
                 df.drop(columns=['Date'], inplace=True)
-                
+
+                #Delete the Date column
+                df.drop(columns=['Days'], inplace=True)
+
                 # Define the new column names
                 new_column_names = [
                     'type',
                     'bill_no',
                     'due_date',
-                    'days',
                     'inv_amount',
                     'cycle1',
                     'cycle2',
@@ -206,7 +208,6 @@ def upload_excel(request):
                             type=row['type'],
                             bill_no=row['bill_no'],
                             due_date=row['due_date'],
-                            days=row['days'],
                             inv_amount=row['inv_amount'],
                             cycle1=row['cycle1'],
                             cycle2=row['cycle2'],
