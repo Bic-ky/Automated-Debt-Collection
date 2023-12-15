@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card">
+    <div class="card-body">
+        <h2>Add Client</h2>
+        <br>
+        <form method="POST" action="{% url 'add_client'  %}">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="short_name">Client Id:</label>
+                        {{ form.short_name }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="account_name">Client Name:</label>
+                        {{ form.account_name }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Address:</label>
+                        {{ form.address }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone_number">Phone Number:</label>
+                        {{ form.phone_number }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        {{ form.email }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="balance">Balance:</label>
+                        {{ form.balance }}
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="pan_number">Pan no:</label>
+                        {{ form.pan_number }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="group">Group:</label>
+                        {{ form.group }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="collector">Collector:</label>
+                        {{ form.collector }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="guarantee_world_insurer">Guarantee:</label>
+                        {{ form.guarantee_world_insurer }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="credit_limit">Credit limit:</label>
+                        {{ form.credit_limit }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact_name">Contact Name:</label>
+                        {{ form.contact_name }}
+                    </div>
+                </div>
+            </div>
+            <br>
+            <button class="btn btn-primary btn-lg waves-effect waves-light" type="submit">Submit</button>
+        </form>
+    </div> <!-- end card-body-->
+</div> <!-- end card -->
+
+{% endblock content %}

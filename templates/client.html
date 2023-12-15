@@ -6,9 +6,12 @@
 <div class="col-xl-12">
     <div class="card">
         <div class="card-body">
-
-            <h4 class="card-title">CLIENTS</h4>
-
+             <div class="col-lg-12 text-right">
+            <a href="{% url 'add_client' %}" class="btn btn-primary active waves-effect waves-light">
+                Add Client
+            </a>
+            </div>
+            <br>
             <ul class="nav nav-tabs nav-justified mb-3">
                 <li class="nav-item">
                     <a href="#home1" data-toggle="tab" aria-expanded="true" class="nav-link active">
@@ -29,7 +32,7 @@
                         <div class="col-12">
                             <div class="card-body">
                                 <h4 class="card-title">CLIENTS</h4>
-                                <table id="basic-datatable" class="table ">
+                                <table id="basic-datatable" class="table">
                                     <thead>
                                         <tr>
                                             <th>#</th>
@@ -40,27 +43,36 @@
                                             <th>Recievable</th>
                                             <th>Overdue</th>
                                             <th>Overdue + 120d</th>
-                                            
+                                            <th>Edit</th>
+                                            <th>Delete</th>
                                         </tr>
                                     </thead>
-                                
-                                
                                     <tbody>
                                         {% for client in clients %}
                                             <tr>
                                                 <th scope="row">{{ forloop.counter }}</th>
                                                 <td>{{ client.short_name }}</td>
-                                                <td> <b><a href="{% url "client_profile" client_id=client.id %}">{{ client.account_name }}</a> </b></td>
-                                                <td>{{ client.group }} </b></td>
+                                                <td><b><a href="{% url "client_profile" client_id=client.id %}">{{ client.account_name }}</a></b></td>
+                                                <td>{{ client.group }}</td>
                                                 <td>{{ client.pan_number }}</td>
-                                                <td > <b>रु‎ {{ client.balance }}</td>
-                                                <td > <b>रु‎ {{ client.balance }}</td>
-                                                <td class="text-danger"> <b>रु‎ {{ client.balance }}</td>
-                                              
+                                                <td><b>रु‎ {{ client.balance }}</td>
+                                                <td><b>रु‎ {{ client.balance }}</td>
+                                                <td class="text-danger"><b>रु‎ {{ client.balance }}</td>
+                                                <td>
+                                                    <a href="{% url 'edit_client' client_id=client.id %}" class="btn btn-outline-success btn-rounded waves-effect waves-light">
+                                                        Edit
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'delete_client' client_id=client.id %}" class="btn btn-outline-danger btn-rounded waves-effect waves-light">
+                                                        Delete
+                                                    </a>
+                                                </td>
                                             </tr>
                                         {% endfor %}
                                     </tbody>
                                 </table>
+                                
                 
                             </div> <!-- end card body-->
                         </div><!-- end col-->

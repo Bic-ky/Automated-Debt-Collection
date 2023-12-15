@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<div class="card">
+    <div class="card-body">
+        <h2>Edit Client</h2>
+        <br>
+     
+        <form method="POST" action="{% url 'edit_client' client_id=client.id %}">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-lg-6">
+                    <label for="short_name">Client Id:</label>
+                        {{form.short_name}}
+                    <label for="short_name">Client Name:</label>
+                        {{form.account_name}}
+                    <label for="short_name">Address:</label>
+                        {{form.address}}
+
+                    <label for="short_name">Short Name:</label>
+                        {{form.phone_number}}
+                    <label for="short_name">Short Name:</label>
+                        {{form.email}}
+                    <label for="short_name">Balance:</label>
+                        {{form.balance}}
+
+
+                </div>
+                <div class="col-lg-6">
+
+                    <label for="short_name">Pan no:</label>
+                        {{form.pan_number}}
+                    <label for="group">Group:</label>
+                        {{form.group}}
+                    <label for="collector"> Collector:</label>
+                        {{form.collector}}
+
+                    <label for="guarantee_world_insurer">Guarantee:</label>
+                        {{form.guarantee_world_insurer}}
+
+                    <label for="credit_limit">Credit limit:</label>
+                        {{form.credit_limit}}
+                    <label for="contact_name">Contact Name:</label>
+                        {{form.contact_name}}
+               
+                </div>
+            </div>
+            <br>
+            <button class="btn btn-primary btn-lg waves-effect waves-light" type="submit">Submit</button>
+        </form>
+    </div> <!-- end card-body-->
+</div> <!-- end card -->
+
+           
+{% endblock content %}
+
+
+    
+
+
+
+
+    
+
+    <label for="balance">Balance:</label>
+    <input type="number" name="balance" id="balance" step="0.01">
+    
+    <label for="phone_number">Phone Number:</label>
+    <input type="text" name="phone_number" id="phone_number" maxlength="15">
+
+    <label for="email">Email:</label>
+    <input type="email" name="email" id="email">
+
+    <label for="contact_name">Contact Name:</label>
+    <input type="text" name="contact_name" id="contact_name" maxlength="255">
+
+    <label for="group">Group:</label>
+    <input type="text" name="group" id="group" maxlength="100">
+
+    <label for="collector">Collector:</label>
+    <select name="collector" id="collector">
+        <!-- Add options based on your User model or leave it empty for the user to select -->
+    </select>
+
+    <label for="guarantee_world_insurer">Guarantee World Insurer:</label>
+    <input type="text" name="guarantee_world_insurer" id="guarantee_world_insurer" maxlength="255">
+
+    <label for="credit_limit">Credit Limit:</label>
+    <input type="number" name="credit_limit" id="credit_limit" step="0.01">
+
+    <button type="submit">Submit</button>

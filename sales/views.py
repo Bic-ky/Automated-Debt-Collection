@@ -1,6 +1,6 @@
 from django.forms import ValidationError
 from datetime import datetime
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from . models import Client,Bill,Action
 from .resources import BillResource
@@ -265,9 +265,12 @@ def update_client_balance(client):
     # Update the balance field in the Client model
     client.balance = total_cycles_sum
     client.save()
+    
 def collection(request):
+    clients = Client.objects.all()
     actions = Action.objects.all() 
-    context = {'actions': actions}
+    context = {'actions': actions,
+               'clients': clients}
     return render(request, 'collection.html', context)
 
 
@@ -280,3 +283,41 @@ def client_profile(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     bills = client.bill_set.all()  # Assuming you have a related name 'bill_set' in your Client model
     return render(request, 'client_profile.html', {'client': client, 'bills': bills})
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Client
+from .forms import ClientForm
+
+def edit_client(request, client_id):
+    client = get_object_or_404(Client, id=client_id)
+
+    if request.method == 'POST':
+        form = ClientForm(request.POST, instance=client)
+        if form.is_valid(): 
+            form.save()
+            return redirect('client')  # Redirect to a success page or another view
+    else:
+        form = ClientForm(instance=client)
+
+    return render(request, 'edit_client.html', {'form': form, 'client': client})
+
+def delete_client(request, client_id):
+    client = get_object_or_404(Client, id=client_id)
+    client.delete()
+    messages.success(request, 'Client has been deleted successfully!')
+    return redirect('client')
+
+    
+
+
+def add_client(request):
+    if request.method == 'POST':
+        form = ClientForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('client')  # Redirect to a success page or another view
+    else:
+        form = ClientForm()
+
+    return render(request, 'add_client.html', {'form': form, 'client': None})

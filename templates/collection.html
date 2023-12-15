@@ -55,11 +55,33 @@
                                         <tr>
                                             <td>{{ forloop.counter }}</td>
                                             <td>{{ action.action_date }}</td>
-                                            <td>{{ action.action_type.name }}</td>  
-                                            <td>{{ action_type_display(action.action_type) }}</td>  
-                                            <td>{{ action.action_amount }}</td>
-                                            <td>{{ action.short_name.pk }}</td>  
-                                            <td>{{ action.short_name.account_name }}</td>
+                                            {% if action.action_type == 'Sms' %}
+                                                <td>
+                                                    <button type="button" class="btn btn-warning waves-effect waves-light "style="width: 150px;">
+                                                        <i class="mdi mdi-message"></i> {{ action.action_type }}
+                                                    </button>
+                                                </td>
+                                                
+                                            {% elif action.action_type == 'Call' %}
+                                                <td>
+                                                    <button type="button" class="btn btn-success waves-effect waves-light "style="width: 150px;">
+                                                        <i class="mdi mdi-phone"></i> {{ action.action_type }}
+                                                    </button>
+                                                </td>
+                                                
+                                            {% elif action.action_type == 'Email' %}
+                                                <td>
+                                                    <button type="button" class="btn btn-danger waves-effect waves-light "style="width: 150px;">
+                                                        <i class="mdi mdi-gmail"></i> {{ action.action_type }}
+                                                    </button>
+                                                </td>
+                                                
+                                            {% endif %}
+                                            <td>hello</td>  
+                                            <td>100</td>
+                                            
+                                            <td>{{ action.bill_no.short_name.short_name }}</td>  
+                                            <td><a href="{% url "client_profile" client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
