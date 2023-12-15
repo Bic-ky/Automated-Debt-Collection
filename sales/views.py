@@ -335,3 +335,4 @@ def add_client(request):
         form = ClientForm()
 
     return render(request, 'add_client.html', {'form': form, 'client': None})
+    

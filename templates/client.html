@@ -42,30 +42,25 @@
                                             <th>Pan no:</th>
                                             <th>Overdue</th>
                                             <th>Overdue + 120d</th>
-                                            <th>Edit</th>
-                                            <th>Delete</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for client in clients %}
                                             <tr>
-                                                <th scope="row">{{ forloop.counter }}</th>
+                                                <th scope="row"><a id="deleteButton" href="{% url 'delete_client' client_id=client.id %}"><i class="feather-trash-2 text-danger"></i></a>
+                                                    &emsp;</th>
                                                 <td>{{ client.short_name }}</td>
-                                                <td><b><a href="{% url "client_profile" client_id=client.id %}">{{ client.account_name }}</a></b></td>
+                                                <td>
+                                                    
+                                                    <b>
+                                                    <a href="{% url "client_profile" client_id=client.id %}">{{ client.account_name }}</a> </b>
+                                                    &emsp; <a href="{% url "edit_client" client_id=client.id %}"><i class="dripicons-document-edit text-success" ></i></a>
+                                                </td>
                                                 <td>{{ client.group }}</td>
                                                 <td>{{ client.pan_number }}</td>
                                                 <td><b>रु‎ {{ client.balance }}</td>
                                                 <td><b>रु‎ {{ client.overdue120 }}</td>
-                                                <td>
-                                                    <a href="{% url 'edit_client' client_id=client.id %}" class="btn btn-outline-success btn-rounded waves-effect waves-light">
-                                                        Edit
-                                                    </a>
-                                                </td>
-                                                <td>
-                                                    <a href="{% url 'delete_client' client_id=client.id %}" class="btn btn-outline-danger btn-rounded waves-effect waves-light">
-                                                        Delete
-                                                    </a>
-                                                </td>
+
                                             </tr>
                                         {% endfor %}
                                     </tbody>
@@ -77,14 +72,7 @@
                     </div>
                     <!-- end row-->
                 </div>
-                <div class="tab-pane show " id="profile1">
-                    <p>Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt.Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim.</p>
-                    <p class="mb-0">Leggings occaecat dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.</p>
-                </div>
-               
             </div>
-
-            
         </div> <!-- end card-body-->
     </div> <!-- end card-->
 </div> <!-- end col -->
@@ -93,56 +81,3 @@
 {% endblock content %}
 
 
-<div class="tab-content">
-    <div class="tab-pane" id="home1">
-        <div class="row">
-            <div class="col-12">
-                <div class="card-body">
-                    <h4 class="card-title">Basic Data Table</h4>
-                    <table id="basic-datatable" class="table ">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Client Id</th>
-                                <th>Client Name</th>
-                                <th>Group</th>
-                                <th>Pan no:</th>
-                                <th>Recievable</th>
-                                <th>Overdue</th>
-                                <th>Overdue + 120d</th>
-                                
-                            </tr>
-                        </thead>
-                    
-                    
-                        <tbody>
-                            {% for client in clients %}
-                                <tr>
-                                    <th scope="row">{{ forloop.counter }}</th>
-                                    <td>{{ client.short_name }}</td>
-                                    <td> <b><a href="{% url "client_profile" %}">{{ client.account_name }}</a> </b></td>
-                                    <td>{{ client.group }} </b></td>
-                                    <td>{{ client.pan_number }}</td>
-                                    <td class="text-success"> <b>रु‎ {{ client.balance }}</td>
-                                    <td class="text-warning"> <b>रु‎ {{ client.balance }}</td>
-                                    <td class="text-danger"> <b>रु‎ {{ client.balance }}</td>
-                                  
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-    
-                </div> <!-- end card body-->
-            </div><!-- end col-->
-        </div>
-        <!-- end row-->
-    </div>
-    <div class="tab-pane show active" id="profile1">
-        <p>Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt.Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim.</p>
-        <p class="mb-0">Leggings occaecat dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.</p>
-    </div>
-    <div class="tab-pane" id="settings1">
-        <p>Food truck quinoa dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.</p>
-        <p class="mb-0">Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt.Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim.</p>
-    </div>
-</div>
