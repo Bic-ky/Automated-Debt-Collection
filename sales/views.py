@@ -209,6 +209,7 @@ def upload_excel(request):
                         success_count += 1
                         # Call the function to update the client's balance after each Bill creation
                         update_client_balance(client)
+                        overdue120d(client)
                     except Client.DoesNotExist:
                         error_messages.append(f'Client "{short_name_value}" not found at row {index + 2}\n')
                     except ValidationError as e:
@@ -240,6 +241,25 @@ def upload_excel(request):
     return render(request, 'upload.html', context)
 
 
+def collection(request):
+    clients = Client.objects.all()
+    actions = Action.objects.all() 
+    context = {'actions': actions,
+               'clients': clients}
+    return render(request, 'collection.html',context)
+
+def overdue120d(client):
+    # Get the sum of all cycles for the client's bills
+    total_cycles_sum = Bill.objects.filter(short_name=client).aggregate(
+        total_cycles_sum=Sum('cycle9'))['total_cycles_sum'] or Decimal('0.00')
+
+    # Round the total_cycles_sum to two decimal places
+    total_cycles_sum = round(total_cycles_sum, 2)
+
+    # Update the overdue120 field in the Client model
+    client.overdue120 = total_cycles_sum
+    client.save() 
+
 def download_excel(request):
     file_path = 'sorted_aging_report.xlsx'
     if default_storage.exists(file_path):
@@ -266,12 +286,6 @@ def update_client_balance(client):
     client.balance = total_cycles_sum
     client.save()
     
-def collection(request):
-    clients = Client.objects.all()
-    actions = Action.objects.all() 
-    context = {'actions': actions,
-               'clients': clients}
-    return render(request, 'collection.html', context)
 
 
 def client(request):

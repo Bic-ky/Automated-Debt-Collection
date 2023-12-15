@@ -21,6 +21,7 @@ class Client(models.Model):
     collector = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': User.USER}, related_name='clients', null=True, blank=True)
     guarantee_world_insurer = models.CharField(max_length=255, null=True, blank=True)
     credit_limit = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    overdue120=models.FloatField(null=True, blank=True)
 
 
     def __str__(self):

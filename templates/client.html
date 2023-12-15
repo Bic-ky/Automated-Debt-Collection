@@ -40,7 +40,6 @@
                                             <th>Client Name</th>
                                             <th>Group</th>
                                             <th>Pan no:</th>
-                                            <th>Recievable</th>
                                             <th>Overdue</th>
                                             <th>Overdue + 120d</th>
                                             <th>Edit</th>
@@ -56,8 +55,7 @@
                                                 <td>{{ client.group }}</td>
                                                 <td>{{ client.pan_number }}</td>
                                                 <td><b>रु‎ {{ client.balance }}</td>
-                                                <td><b>रु‎ {{ client.balance }}</td>
-                                                <td class="text-danger"><b>रु‎ {{ client.balance }}</td>
+                                                <td><b>रु‎ {{ client.overdue120 }}</td>
                                                 <td>
                                                     <a href="{% url 'edit_client' client_id=client.id %}" class="btn btn-outline-success btn-rounded waves-effect waves-light">
                                                         Edit
