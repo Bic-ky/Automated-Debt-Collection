@@ -1,15 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% load static %}
+<link href="{% static "assets/css/loader.css" %}" rel="stylesheet" type="text/css" />
+
+    <div id="loadingOverlay">
+        <div class="dots-loader"></div>
+    </div>
+    
+    <!-- Your content goes here -->
     <div class="col-xl-12">
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">Upload file</h4>
-                <form method="post" enctype="multipart/form-data">
+                <form id="uploadForm" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     {{ form }}
                     <br>
-                    <button type="submit" class="btn btn-primary">Upload</button>
+                    <button type="submit" class="btn btn-primary" onclick="startUpload()">Upload</button>
                 </form>
                 <br>
                 {% if error_message %}
@@ -23,5 +31,23 @@
             </div> <!-- end card-body-->
         </div> <!-- end card-->
     </div> <!-- end col -->
+    
     {% include "alerts.html" %}
+
+    <script>
+        //loader page
+        function startUpload() {
+            // Show loading overlay
+            document.body.classList.add('loading');
+            document.getElementById('loadingOverlay').style.display = 'flex';
+
+            // Simulate a delay (replace this with your actual file upload code)
+            setTimeout(function () {
+                // Hide loading overlay after the file is uploaded
+                document.body.classList.remove('loading');
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }, 40000); // Replace 40000 with the actual time it takes to upload the file
+        }
+    </script>
 {% endblock content %}
+    
