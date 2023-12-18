@@ -71,5 +71,7 @@ class Action(models.Model):
     action_amount= models.FloatField()
     short_name = models.ForeignKey(Client, on_delete=models.CASCADE)
     bill_no = models.CharField(max_length=40, blank=True)
+    completed = models.BooleanField(default=False)
 
-
+    def __str__(self):
+        return f"{self.action_type} on {self.action_date} for {self.short_name}"

@@ -217,6 +217,9 @@ def upload_excel(request):
                         update_client_balance(client)
                         overdue120d(client)
                         
+                        # Call the function to create actions for due bills
+                        create_actions_for_due_bills()
+                        
                         
                         
                     except Client.DoesNotExist:
@@ -342,6 +345,52 @@ def add_client(request):
         form = ClientForm()
 
     return render(request, 'add_client.html', {'form': form, 'client': None})
+
+from datetime import timedelta
+from django.utils import timezone
+
+def create_actions_for_due_bills():
+    # Get today's date
+    today = timezone.now().date()
+
+    # Define the due date differences and corresponding action types
+    due_date_diff_types = [
+        (3, 'SMS', 'auto'),
+        (5, 'SMS', 'auto'),
+        (6, 'Call', 'manual'),
+    ]
+
+    # Iterate through the due date differences and create actions for bills
+    for due_date_diff, action_type, action_mode in due_date_diff_types:
+        # Calculate the target date based on the due date difference
+        target_date = today - timedelta(days=due_date_diff)
+
+        # Get overdue bills with due dates equal to the target date
+        bills_to_process = Bill.objects.filter(due_date=target_date, balance__gt=0)
+
+        # Iterate through bills and create actions
+        for bill in bills_to_process:
+            # Check if an action for the same bill, action type, and mode already exists
+            existing_action = Action.objects.filter(
+                bill_no=bill.bill_no,
+                action_type=action_type,
+                type='manual' if action_mode == 'manual' else 'auto'
+            ).first()
+
+            # Create the action only if it doesn't already exist
+            if not existing_action:
+                Action.objects.create(
+                    action_date=today,
+                    type='manual' if action_mode == 'manual' else 'auto',
+                    action_type=action_type,
+                    action_amount=bill.balance,
+                    short_name=bill.short_name,
+                    bill_no=bill.bill_no,
+                    completed=False
+                )
+
+
+
 
 
 
