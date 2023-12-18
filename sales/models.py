@@ -71,3 +71,5 @@ class Action(models.Model):
     action_amount= models.FloatField()
     short_name = models.ForeignKey(Client, on_delete=models.CASCADE)
     bill_no = models.CharField(max_length=40, blank=True)
+
+

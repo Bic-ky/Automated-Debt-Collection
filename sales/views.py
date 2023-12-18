@@ -14,7 +14,7 @@ from django.http import FileResponse, HttpResponse
 from django.core.files.storage import default_storage
 from pandas.errors import EmptyDataError
 from nepali_date_converter import english_to_nepali_converter, nepali_to_english_converter
-from django.db.models import Sum
+from django.db.models import Sum,F
 from decimal import Decimal
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Client
@@ -168,6 +168,9 @@ def upload_excel(request):
 
                 # Rename columns
                 df = df.rename(columns=column_mapping)
+                
+                 # Calculate the balance directly in the DataFrame
+                df['balance'] = df[['cycle1', 'cycle2', 'cycle3', 'cycle4', 'cycle5', 'cycle6', 'cycle7', 'cycle8', 'cycle9']].sum(axis=1)
 
                 # Assuming df is your DataFrame
                 df.to_excel('sorted_aging_report.xlsx', index=False)
@@ -213,6 +216,9 @@ def upload_excel(request):
                         # Call the function to update the client's balance after each Bill creation
                         update_client_balance(client)
                         overdue120d(client)
+                        
+                        
+                        
                     except Client.DoesNotExist:
                         error_messages.append(f'Client "{short_name_value}" not found at row {index + 2}\n')
                     except ValidationError as e:
@@ -317,6 +323,7 @@ def edit_client(request, client_id):
 
     return render(request, 'edit_client.html', {'form': form, 'client': client})
 
+
 def delete_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     client.delete()
@@ -324,7 +331,6 @@ def delete_client(request, client_id):
     return redirect('client')
 
     
-
 
 def add_client(request):
     if request.method == 'POST':
