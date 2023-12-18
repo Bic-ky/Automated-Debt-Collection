@@ -63,10 +63,11 @@ class Action(models.Model):
         )
     type =models.CharField(max_length=20, choices=TYPE_CHOICES)
     ACTION_CHOICES = (
-        ('sms','sms'),
-        ('email','email'),
-        ('call','call'),  
+        ('SMS','SMS'),
+        ('Email','Email'),
+        ('Call','Call'), 
         )
     action_type =models.CharField(max_length=20, choices=ACTION_CHOICES)
     action_amount= models.FloatField()
     short_name = models.ForeignKey(Client, on_delete=models.CASCADE)
+    bill_no = models.CharField(max_length=40, blank=True)

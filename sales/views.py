@@ -16,6 +16,9 @@ from pandas.errors import EmptyDataError
 from nepali_date_converter import english_to_nepali_converter, nepali_to_english_converter
 from django.db.models import Sum
 from decimal import Decimal
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Client
+from .forms import ClientForm
 
 # Create your views here.
 def profile(request):
@@ -299,9 +302,7 @@ def client_profile(request, client_id):
     return render(request, 'client_profile.html', {'client': client, 'bills': bills})
 
 
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Client
-from .forms import ClientForm
+
 
 def edit_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
@@ -335,4 +336,7 @@ def add_client(request):
         form = ClientForm()
 
     return render(request, 'add_client.html', {'form': form, 'client': None})
+
+
+
     

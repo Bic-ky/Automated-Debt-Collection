@@ -55,7 +55,7 @@
                                         <tr>
                                             <td>{{ forloop.counter }}</td>
                                             <td>{{ action.action_date }}</td>
-                                            {% if action.action_type == 'Sms' %}
+                                            {% if action.action_type == 'SMS' %}
                                                 <td>
                                                     <button type="button" class="btn btn-warning waves-effect waves-light "style="width: 150px;">
                                                         <i class="mdi mdi-message"></i> {{ action.action_type }}
@@ -78,10 +78,10 @@
                                                 
                                             {% endif %}
                                             <td>hello</td>  
-                                            <td>100</td>
+                                            <td>Rs{{ action.action_amount}}</td>  
                                             
-                                            <td>{{ action.bill_no.short_name.short_name }}</td>  
-                                            <td><a href="{% url "client_profile" client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>
+                                            <td>{{ action.short_name.short_name }}</td>  
+                                            <td><a href="{% url "client_profile" client_id=action.short_name.id %}">{{ action.short_name }}</a></td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
