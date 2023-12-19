@@ -16,5 +16,5 @@ class BillData(ImportExportActionModelAdmin):
 
 @admin.register(Action)
 class ActionData(ImportExportActionModelAdmin):
-    list_display = ['action_date', 'action_type','type','short_name','bill_no']
+    list_display = ['action_date', 'action_type','type','short_name','bill_no','completed']
     search_fields = ['short_name', 'type','bill_no']

@@ -253,12 +253,33 @@ def upload_excel(request):
     return render(request, 'upload.html', context)
 
 
+from .forms import ActionUpdateForm
+
 def collection(request):
     clients = Client.objects.all()
     actions = Action.objects.all() 
-    context = {'actions': actions,
-               'clients': clients}
-    return render(request, 'collection.html',context)
+
+    if request.method == 'POST':
+        form = ActionUpdateForm(request.POST)
+        if form.is_valid():
+            selected_actions_ids = request.POST.getlist('completed_actions')
+            
+            # Convert the list of strings to a list of integers
+            selected_actions_ids = [int(action_id) for action_id in selected_actions_ids]
+
+            # Update the completion status of selected actions
+            Action.objects.filter(id__in=selected_actions_ids).update(completed=True)
+
+            # Refresh the actions queryset after the update
+            actions = Action.objects.all()
+
+    else:
+        form = ActionUpdateForm()
+
+    context = {'actions': actions, 'clients': clients, 'form': form}
+    return render(request, 'collection.html', context)
+
+
 
 def overdue120d(client):
     # Get the sum of all cycles for the client's bills

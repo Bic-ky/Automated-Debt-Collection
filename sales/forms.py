@@ -1,10 +1,17 @@
 from django import forms
-from .models import Client
+from .models import Client,Action
 
 class ExcelUploadForm(forms.Form):
     file = forms.FileField(widget=forms.ClearableFileInput(attrs={'class': 'dropify'}))
 
+class ActionUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Action
+        fields = ['completed']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['completed'].widget.attrs.update({'class': 'form-control'})
 
 class ClientForm(forms.ModelForm):
     class Meta:
