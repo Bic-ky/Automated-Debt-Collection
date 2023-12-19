@@ -5,7 +5,6 @@ from django.urls import reverse
 from . models import Client,Bill,Action
 from .resources import BillResource
 from django.contrib import messages
-from tablib import Dataset
 from .forms import ExcelUploadForm  
 from django.core.exceptions import ValidationError
 import pandas as pd
@@ -19,7 +18,9 @@ from decimal import Decimal
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Client
 from .forms import ClientForm
-
+from .forms import ActionUpdateForm
+from datetime import timedelta
+from django.utils import timezone
 # Create your views here.
 def profile(request):
     return render(request , 'profile.html')
@@ -51,7 +52,6 @@ def convert_nepali_to_ad(nepali_date):
     except Exception as e:
         print(f"Error converting Nepali date: {e}")
         return None  # or return the original value if conversion fails
-
 
 def upload_excel(request):
     success_messages = []
@@ -233,9 +233,17 @@ def upload_excel(request):
                     download_link = reverse('download_excel')
                 else:
                     download_link = None
+                    
+                for success_message in success_messages:
+                    messages.success(request, success_message)
+                for error_message in error_messages:
+                    messages.error(request, error_message)
+                    
+                return redirect('upload_excel')
 
             except Exception as e:
                 error_messages.append(f'Error processing Excel file: {e}')
+        
     else:
         form = ExcelUploadForm()
 
@@ -245,19 +253,19 @@ def upload_excel(request):
     }
 
     for success_message in success_messages:
-        messages.success(request, success_message)
-
+            messages.success(request, success_message)
     for error_message in error_messages:
         messages.error(request, error_message)
 
     return render(request, 'upload.html', context)
 
-
-from .forms import ActionUpdateForm
-
 def collection(request):
     clients = Client.objects.all()
     actions = Action.objects.all() 
+    
+    # Calculate the count of manual actions that are not completed
+    manual_not_completed_count = Action.objects.filter(type='manual', completed=False).count()
+    auto_count = Action.objects.filter(type='auto', completed=False).count()
 
     if request.method == 'POST':
         form = ActionUpdateForm(request.POST)
@@ -270,16 +278,22 @@ def collection(request):
             # Update the completion status of selected actions
             Action.objects.filter(id__in=selected_actions_ids).update(completed=True)
 
-            # Refresh the actions queryset after the update
-            actions = Action.objects.all()
+            # Recalculate the counts after the update
+            manual_not_completed_count = Action.objects.filter(type='manual', completed=False).count()
+            auto_count = Action.objects.filter(type='auto', completed=False).count()
+
+            # Redirect to the same view to avoid resubmitting the form on page reload
+            return redirect('collection')
 
     else:
         form = ActionUpdateForm()
 
-    context = {'actions': actions, 'clients': clients, 'form': form}
+    context = {'actions': actions, 
+               'clients': clients,
+               'manual_not_completed_count': manual_not_completed_count, 
+               'auto_count': auto_count,
+               'form': form}
     return render(request, 'collection.html', context)
-
-
 
 def overdue120d(client):
     # Get the sum of all cycles for the client's bills
@@ -303,8 +317,6 @@ def download_excel(request):
     else:
         return HttpResponse("File not found", status=404)
     
-
-
 def update_client_balance(client):
     # Get the sum of all cycles for the client's bills
     total_cycles_sum = Bill.objects.filter(short_name=client).aggregate(
@@ -319,20 +331,14 @@ def update_client_balance(client):
     client.balance = total_cycles_sum
     client.save()
     
-
-
 def client(request):
     clients = Client.objects.all()
     return render(request , 'client.html' ,  {'clients': clients})
-
 
 def client_profile(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     bills = client.bill_set.all()  # Assuming you have a related name 'bill_set' in your Client model
     return render(request, 'client_profile.html', {'client': client, 'bills': bills})
-
-
-
 
 def edit_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
@@ -347,14 +353,11 @@ def edit_client(request, client_id):
 
     return render(request, 'edit_client.html', {'form': form, 'client': client})
 
-
 def delete_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     client.delete()
     messages.success(request, 'Client has been deleted successfully!')
     return redirect('client')
-
-    
 
 def add_client(request):
     if request.method == 'POST':
@@ -366,9 +369,6 @@ def add_client(request):
         form = ClientForm()
 
     return render(request, 'add_client.html', {'form': form, 'client': None})
-
-from datetime import timedelta
-from django.utils import timezone
 
 def create_actions_for_due_bills():
     # Get today's date

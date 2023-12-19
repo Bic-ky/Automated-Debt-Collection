@@ -18,3 +18,4 @@ class BillData(ImportExportActionModelAdmin):
 class ActionData(ImportExportActionModelAdmin):
     list_display = ['action_date', 'action_type','type','short_name','bill_no','completed']
     search_fields = ['short_name', 'type','bill_no']
+    list_editable = ['completed','type','action_type']  
