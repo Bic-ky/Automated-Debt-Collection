@@ -18,7 +18,7 @@ from decimal import Decimal
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Client
 from .forms import ClientForm
-from .forms import ActionUpdateForm
+from .forms import ActionUpdateForm,AddActionForm
 from datetime import timedelta
 from django.utils import timezone
 # Create your views here.
@@ -259,6 +259,8 @@ def upload_excel(request):
 
     return render(request, 'upload.html', context)
 
+
+
 def collection(request):
     clients = Client.objects.all()
     actions = Action.objects.all() 
@@ -266,34 +268,51 @@ def collection(request):
     # Calculate the count of manual actions that are not completed
     manual_not_completed_count = Action.objects.filter(type='manual', completed=False).count()
     auto_count = Action.objects.filter(type='auto', completed=False).count()
-
+    
+    # Initialize the form variables outside the if block
+    add_form = AddActionForm()
+    update_form = ActionUpdateForm()
+    
     if request.method == 'POST':
-        form = ActionUpdateForm(request.POST)
-        if form.is_valid():
-            selected_actions_ids = request.POST.getlist('completed_actions')
-            
-            # Convert the list of strings to a list of integers
-            selected_actions_ids = [int(action_id) for action_id in selected_actions_ids]
+        # Check if the form submitted is the AddActionForm
+        if 'add_action' in request.POST:
+            add_form = AddActionForm(request.POST)
+            if add_form.is_valid():
+                # Process the form data and save the new action
+                add_form.save()
+                # Redirect to the same view to avoid resubmitting the form on page reload
+                return redirect('collection')
 
-            # Update the completion status of selected actions
-            Action.objects.filter(id__in=selected_actions_ids).update(completed=True)
+        # Check if the form submitted is the ActionUpdateForm
+        elif 'update_actions' in request.POST:
+            update_form = ActionUpdateForm(request.POST)
+            if update_form.is_valid():
+                selected_actions_ids = request.POST.getlist('completed_actions')
+                
+                # Convert the list of strings to a list of integers
+                selected_actions_ids = [int(action_id) for action_id in selected_actions_ids]
 
-            # Recalculate the counts after the update
-            manual_not_completed_count = Action.objects.filter(type='manual', completed=False).count()
-            auto_count = Action.objects.filter(type='auto', completed=False).count()
+                # Update the completion status of selected actions
+                Action.objects.filter(id__in=selected_actions_ids).update(completed=True)
 
-            # Redirect to the same view to avoid resubmitting the form on page reload
-            return redirect('collection')
+                # Recalculate the counts after the update
+                manual_not_completed_count = Action.objects.filter(type='manual', completed=False).count()
+                auto_count = Action.objects.filter(type='auto', completed=False).count()
 
+                # Redirect to the same view to avoid resubmitting the form on page reload
+                return redirect('collection')
     else:
-        form = ActionUpdateForm()
+        add_form = AddActionForm()
+        update_form = ActionUpdateForm()
 
     context = {'actions': actions, 
                'clients': clients,
                'manual_not_completed_count': manual_not_completed_count, 
                'auto_count': auto_count,
-               'form': form}
+               'add_form': add_form,
+               'update_form': update_form}
     return render(request, 'collection.html', context)
+
 
 def overdue120d(client):
     # Get the sum of all cycles for the client's bills
