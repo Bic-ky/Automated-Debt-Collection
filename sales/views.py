@@ -268,6 +268,8 @@ def collection(request):
     # Calculate the count of manual actions that are not completed
     manual_not_completed_count = Action.objects.filter(type='manual', completed=False).count()
     auto_count = Action.objects.filter(type='auto', completed=False).count()
+   
+
     
     # Initialize the form variables outside the if block
     add_form = AddActionForm()
@@ -428,6 +430,32 @@ def create_actions_for_due_bills():
                     bill_no=bill.bill_no,
                     completed=False
                 )
+
+
+
+from django.http import JsonResponse
+from django.core.serializers.json import DjangoJSONEncoder
+from .models import Client, Bill
+
+def get_client_names(request):
+    # Query all clients and their associated bill numbers
+    client_data = (
+        Client.objects
+        .values('account_name')
+        .annotate(bill_numbers=F('bill__bill_no')).distinct()
+    )
+
+    # Convert QuerySet to a list of dictionaries
+    client_data_list = list(client_data)
+
+    # Iterate over the list and fetch all unique bill numbers for each client
+    for client in client_data_list:
+        # Use a set to ensure uniqueness of bill numbers
+        unique_bill_numbers = set(Bill.objects.filter(short_name__account_name=client['account_name']).values_list('bill_no', flat=True))
+        client['bill_numbers'] = list(unique_bill_numbers)
+
+    return JsonResponse({'client_data': client_data_list}, encoder=DjangoJSONEncoder, safe=False)
+
 
 
 

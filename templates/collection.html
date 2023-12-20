@@ -239,7 +239,7 @@
   <div class="modal-dialog" role="document">
       <div class="modal-content">
           <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+              <h5 class="modal-title" id="exampleModalLongTitle"> <i class="mdi mdi-format-list-triangle"></i> Action  </h5>
               <button type="button" class="close waves-effect waves-light" data-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true">&times;</span>
               </button>
@@ -271,24 +271,76 @@
               </div>
               <br>
               <br>
+              <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
               <div class="form-group">
                 <label>Client</label>
-
-                <select class="form-control" data-toggle="select2">
-                    <option>Select</option>
-                        <option value="VA">Virginia</option>
-                        <option value="WV">West Virginia</option>
+                <select id="clientSelect" class="form-control" data-toggle="select2">
+                    <option value="">Select</option>
                 </select>
-              </div>
-            <div class="form-group">
-              <label>Bill No:</label>
-
-              <select class="form-control" data-toggle="select2">
-                  <option>Select</option>
-                  <option value="VA">Virginia</option>
-                        <option value="WV">West Virginia</option>
-              </select>
             </div>
+            
+            <div class="form-group">
+                <label>Bill No:</label>
+                <select id="billSelect" class="form-control" data-toggle="select2">
+                    <option value="">Select</option>
+                </select>
+            </div>
+            
+            <script>
+              $(document).ready(function () {
+                  var clientSelect = $('#clientSelect');
+                  var billSelect = $('#billSelect');
+          
+                  // Fetch client data
+                  $.ajax({
+                      url: '/sales/get_client_names/',
+                      dataType: 'json',
+                      success: function (data) {
+                          $.each(data.client_data, function (index, client) {
+                              clientSelect.append('<option value="' + client.account_name + '">' + client.account_name + '</option>');
+                          });
+          
+                          // Define a function to handle the change event
+                          function handleClientChange() {
+                              var selectedClient = clientSelect.val();
+                              billSelect.empty();
+          
+                              // Find the selected client's data
+                              var selectedClientData = data.client_data.find(function (client) {
+                                  return client.account_name === selectedClient;
+                              });
+          
+                              // Populate bill numbers in the bills dropdown
+                              if (selectedClientData) {
+                                  var billNumbers = selectedClientData.bill_numbers || [];
+                                  $.each(billNumbers, function (index, billNumber) {
+                                      billSelect.append('<option value="' + billNumber + '">' + billNumber + '</option>');
+                                  });
+                              }
+                          }
+          
+                          // Check if the change event is already bound before binding it
+                          if (!clientSelect.data('event-bound')) {
+                              // Bind the change event to the handler
+                              clientSelect.on('change', handleClientChange);
+                              // Mark the event as bound
+                              clientSelect.data('event-bound', true);
+                          }
+                      },
+                      error: function (error) {
+                          console.error("Error fetching client data:", error);
+                      }
+                  });
+              });
+          </script>
+          
+          
+          
+
+            
+            
+            
             <div class="form-group">
               <label for="example-readonly">Action Amount:</label>
               <input type="text" id="example-readonly" class="form-control" readonly="" value="Readonly value">
