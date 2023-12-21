@@ -31,8 +31,11 @@ class ActionUpdateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['completed'].widget.attrs.update({'class': 'form-control'})
         
+        # Add form control class to the completed field
+        self.fields['completed'].widget.attrs.update({'class': 'form-control'})
+
+    
 
 class ActionCreationForm(forms.ModelForm):
     class Meta:
@@ -51,5 +54,9 @@ class ActionCreationForm(forms.ModelForm):
                 pass  # Invalid input from the client; ignore and fallback to an empty queryset
         elif self.instance.pk:
             self.fields['bill_no'].queryset = self.instance.short_name.bill_set.order_by('bill_no')
+
+        # Add form control to other fields if needed
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})
 
 
