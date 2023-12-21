@@ -1,0 +1,4 @@
+<option value="">---------</option>
+{% for bill in bills %}
+    <option value="{{ bill.pk }}">{{ bill.bill_no }}</option>
+{% endfor %}

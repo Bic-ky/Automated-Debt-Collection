@@ -16,7 +16,10 @@ urlpatterns = [
     path('download_excel/', views.download_excel, name='download_excel'),
     path('collection/', views.collection , name='collection' ),
     
-    path('get_client_names/', views.get_client_names, name='get_client_names'),
     
+    path('get_client_names/', views.get_client_names, name='get_client_names'),
+    path('ajax/load-bills/', views.load_bills, name='load_bills'),  # AJAX
+    
+
 
 ]

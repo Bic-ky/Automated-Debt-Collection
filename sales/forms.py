@@ -1,4 +1,4 @@
-from datetime import timezone
+from datetime import date
 from django import forms
 from .models import Client,Action,Bill
 
@@ -34,14 +34,22 @@ class ActionUpdateForm(forms.ModelForm):
         self.fields['completed'].widget.attrs.update({'class': 'form-control'})
         
 
-class AddActionForm(forms.ModelForm):
+class ActionCreationForm(forms.ModelForm):
     class Meta:
         model = Action
-        fields = ['action_date', 'action_type', 'client', 'bill_no', 'action_amount', 'completed']
+        fields = '__all__'
 
-    action_date = forms.DateField(widget=forms.TextInput(attrs={'readonly': 'readonly'}))
-    action_type = forms.ChoiceField(choices=Action.ACTION_CHOICES, widget=forms.RadioSelect)
-    client = forms.ModelChoiceField(queryset=Client.objects.all(), widget=forms.Select(attrs={'class': 'form-control', 'data-toggle': 'select2'}))
-    bill_no = forms.ModelChoiceField(queryset=Bill.objects.none(), widget=forms.Select(attrs={'class': 'form-control', 'data-toggle': 'select2', 'disabled': 'disabled'}))
-    action_amount = forms.FloatField(widget=forms.TextInput(attrs={'readonly': 'readonly'}))
-    completed = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'mt-3', 'data-toggle': 'switchery', 'data-color': '#4BB543', 'data-size': 'small'}))
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['bill_no'].queryset = Bill.objects.none()
+
+        if 'client' in self.data:
+            try:
+                client_id = int(self.data.get('client'))
+                self.fields['bill_no'].queryset = Bill.objects.filter(short_name_id=client_id).order_by('bill_no')
+            except (ValueError, TypeError):
+                pass  # Invalid input from the client; ignore and fallback to an empty queryset
+        elif self.instance.pk:
+            self.fields['bill_no'].queryset = self.instance.short_name.bill_set.order_by('bill_no')
+
+

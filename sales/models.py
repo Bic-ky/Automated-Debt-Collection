@@ -52,8 +52,11 @@ class Bill(models.Model):
     short_name = models.ForeignKey(Client, on_delete=models.CASCADE)
 
     def __str__(self):
-        account_name = self.short_name.account_name if self.short_name else None
-        return account_name or f"Bill {self.pk}"  # You can customize this fallback representation
+        if self.bill_no:
+            return self.bill_no
+        else:
+            account_name = self.short_name.account_name if self.short_name else None
+            return account_name or f"Bill {self.pk}"  # You can customize this fallback representation
     
 class Action(models.Model):
     action_date=models.DateField()
@@ -69,11 +72,11 @@ class Action(models.Model):
         )
     action_type =models.CharField(max_length=20, choices=ACTION_CHOICES)
     action_amount= models.FloatField()
-    short_name = models.ForeignKey(Client, on_delete=models.CASCADE)
-    bill_no = models.CharField(max_length=40, blank=True)
+    bill_no = models.ForeignKey(Bill, on_delete=models.CASCADE)
     completed = models.BooleanField(default=False)
+    short_name = models.ForeignKey(Client, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.action_type} on {self.action_date} for {self.short_name}"
+        return f"{self.action_type} on {self.action_date} "
     
 

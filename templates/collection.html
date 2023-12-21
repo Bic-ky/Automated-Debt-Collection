@@ -91,8 +91,8 @@
                                       </td>
                                       {% endif %}
                                       <td>Rs {{ action.action_amount }}</td>
-                                      <td>{{ action.short_name.short_name }}</td>
-                                      <td><a href="{% url 'client_profile' client_id=action.short_name.id %}">{{ action.short_name }}</a></td>
+                                      <td>{{ action.bill_no.short_name.short_name }}</td>
+                                      <td><a href="{% url 'client_profile' client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>
                                   </tr>
                                   {% endif %}
                                   {% endfor %}
@@ -156,8 +156,8 @@
                                       </td>
                                       {% endif %}
                                       <td>Rs {{ action.action_amount }}</td>
-                                      <td>{{ action.short_name.short_name }}</td>
-                                      <td><a href="{% url 'client_profile' client_id=action.short_name.id %}">{{ action.short_name }}</a></td>
+                                      <td>{{ action.bill_no.short_name.short_name }}</td>
+                                      <td><a href="{% url 'client_profile' client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>
                                     </tr>
                                     {% endif %}
                                     {% endfor %}
@@ -214,8 +214,8 @@
                                       </td>
                                       {% endif %}
                                       <td>Rs {{ action.action_amount }}</td>
-                                      <td>{{ action.short_name.short_name }}</td>
-                                      <td><a href="{% url 'client_profile' client_id=action.short_name.id %}">{{ action.short_name }}</a></td>
+                                      <td>{{ action.bill_no.short_name.short_name }}</td>
+                                      <td><a href="{% url 'client_profile' client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>
                                     </tr>
                                     {% endif %}
                                     {% endfor %}
@@ -246,112 +246,39 @@
           </div>
           <div class="modal-body">
               <!-- Add Action Form -->
-              <form method="post" action="{% url 'collection' %}">
+              <form method="post" id="actionForm" data-bills-url="{% url 'load_bills' %}">
                 {% csrf_token %}
-                
-                
-                <div class="form-group">
-                  <label for="example-readonly">Action Date</label>
-                  <input type="text" id="example-readonly" class="form-control" readonly="" value="Readonly value">
+            
+                {{ add_form.as_p }}
+            
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary waves-effect waves-light" data-dismiss="modal">Close</button>
+                    <button type="submit" name="add_action" class="btn btn-primary waves-effect waves-light">Update Action</button>
                 </div>
-                <label>Action Type </label><br>
-                <div class="btn-group btn-group-toggle waves-effect waves-light" data-toggle="buttons">
-                  <label class="btn btn-warning waves-effect waves-light">
-                      <input type="radio" name="options" id="option1"
-                          checked> SMS <i class="mdi mdi-message"></i>
-                  </label>
-                  <label class="btn btn-success waves-effect waves-light">
-                      <input type="radio" name="options" id="option2">
-                      Call <i class="mdi mdi-phone"></i>
-                  </label>
-                  <label class="btn btn-danger waves-effect waves-light">
-                      <input type="radio" name="options" id="option3">
-                      Email <i class="mdi mdi-gmail"></i>
-                  </label>
-              </div>
-              <br>
-              <br>
-              <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-
-              <div class="form-group">
-                <label>Client</label>
-                <select id="clientSelect" class="form-control" data-toggle="select2">
-                    <option value="">Select</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Bill No:</label>
-                <select id="billSelect" class="form-control" data-toggle="select2">
-                    <option value="">Select</option>
-                </select>
-            </div>
-            
+            </form>
+            <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
             <script>
-              $(document).ready(function () {
-                  var clientSelect = $('#clientSelect');
-                  var billSelect = $('#billSelect');
+              $(document).ready(function() {
+                  $("#id_short_name").change(function () {
+                      const url = "{% url 'load_bills' %}";
+                      const clientId = $(this).val();
           
-                  // Fetch client data
-                  $.ajax({
-                      url: '/sales/get_client_names/',
-                      dataType: 'json',
-                      success: function (data) {
-                          $.each(data.client_data, function (index, client) {
-                              clientSelect.append('<option value="' + client.account_name + '">' + client.account_name + '</option>');
-                          });
-          
-                          // Define a function to handle the change event
-                          function handleClientChange() {
-                              var selectedClient = clientSelect.val();
-                              billSelect.empty();
-          
-                              // Find the selected client's data
-                              var selectedClientData = data.client_data.find(function (client) {
-                                  return client.account_name === selectedClient;
-                              });
-          
-                              // Populate bill numbers in the bills dropdown
-                              if (selectedClientData) {
-                                  var billNumbers = selectedClientData.bill_numbers || [];
-                                  $.each(billNumbers, function (index, billNumber) {
-                                      billSelect.append('<option value="' + billNumber + '">' + billNumber + '</option>');
-                                  });
-                              }
+                      $.ajax({
+                          url: url,
+                          data: {
+                              'client_id': clientId
+                          },
+                          success: function (data) {
+                              $("#id_bill_no").html(data);
+                          },
+                          error: function (xhr, status, error) {
+                              console.error(xhr.responseText);
                           }
-          
-                          // Check if the change event is already bound before binding it
-                          if (!clientSelect.data('event-bound')) {
-                              // Bind the change event to the handler
-                              clientSelect.on('change', handleClientChange);
-                              // Mark the event as bound
-                              clientSelect.data('event-bound', true);
-                          }
-                      },
-                      error: function (error) {
-                          console.error("Error fetching client data:", error);
-                      }
+                      });
                   });
               });
           </script>
-          
-          
-          
-
             
-            
-            
-            <div class="form-group">
-              <label for="example-readonly">Action Amount:</label>
-              <input type="text" id="example-readonly" class="form-control" readonly="" value="Readonly value">
-            </div>
-            <label>Completed: <input clas="mt-3" type="checkbox" checked data-toggle="switchery" data-color="#4BB543" data-size="small"/></label>
-          </div>
-          <div class="modal-footer">
-              <button type="button" class="btn btn-secondary waves-effect waves-light" data-dismiss="modal">Close</button>
-              <button type="submit" name="add_action" class="btn btn-primary waves-effect waves-light">Update Action</button>
-          </div>
-        </form>
       </div>
   </div>
 </div>

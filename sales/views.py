@@ -18,10 +18,15 @@ from decimal import Decimal
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Client
 from .forms import ClientForm
-from .forms import ActionUpdateForm,AddActionForm
+from .forms import ActionUpdateForm,ActionCreationForm
 from datetime import timedelta
 from django.utils import timezone
+from django.http import JsonResponse
+from django.core.serializers.json import DjangoJSONEncoder
+from .models import Client, Bill
+from datetime import date
 # Create your views here.
+
 def profile(request):
     return render(request , 'profile.html')
 
@@ -184,15 +189,43 @@ def upload_excel(request):
 
                 success_count = 0
                 
-                # Delete all existing Bill instances
-                Bill.objects.all().delete()
                 
-                
-                
+
                 for index, row in df.iterrows():
                     try:
                         short_name_value = row['short_name'].strip()
                         client = clients.get(short_name=short_name_value)
+                        
+                        # Check if a Bill with the same data already exists
+                        existing_bill = Bill.objects.filter(
+                            type=row['type'],
+                            bill_no=row['bill_no'],
+                            due_date=row['due_date'],
+                            short_name=client,
+                        ).first()
+
+                        if existing_bill:
+                            # Update existing Bill with new data
+                            existing_bill.type = row['type']
+                            existing_bill.due_date = row['due_date']
+                            existing_bill.inv_amount = row['inv_amount']
+                            existing_bill.cycle1 = row['cycle1']
+                            existing_bill.cycle2 = row['cycle2']
+                            existing_bill.cycle3 = row['cycle3']
+                            existing_bill.cycle4 = row['cycle4']
+                            existing_bill.cycle5 = row['cycle5']
+                            existing_bill.cycle6 = row['cycle6']
+                            existing_bill.cycle7 = row['cycle7']
+                            existing_bill.cycle8 = row['cycle8']
+                            existing_bill.cycle9 = row['cycle9']
+                            existing_bill.balance = row['balance']
+
+                            # Save the changes
+                            existing_bill.save()
+                            # Call the functions to update the client's balance and overdue120
+                            update_client_balance(existing_bill.short_name)
+                            overdue120d(existing_bill.short_name)
+                            continue
                         
                         # Create a new Bill instance
                         Bill.objects.create(
@@ -259,8 +292,6 @@ def upload_excel(request):
 
     return render(request, 'upload.html', context)
 
-
-
 def collection(request):
     clients = Client.objects.all()
     actions = Action.objects.all() 
@@ -271,18 +302,19 @@ def collection(request):
    
 
     
-    # Initialize the form variables outside the if block
-    add_form = AddActionForm()
+    # Set the initial value of the "Action Date" field to today's date
+    today_date = date.today()
+    add_form = ActionCreationForm(initial={'action_date': today_date})
     update_form = ActionUpdateForm()
     
     if request.method == 'POST':
-        # Check if the form submitted is the AddActionForm
+        # Check if the form submitted is the ActionCreationForm
         if 'add_action' in request.POST:
-            add_form = AddActionForm(request.POST)
+            add_form = ActionCreationForm(request.POST)
             if add_form.is_valid():
-                # Process the form data and save the new action
-                add_form.save()
+                
                 # Redirect to the same view to avoid resubmitting the form on page reload
+                add_form.save()
                 return redirect('collection')
 
         # Check if the form submitted is the ActionUpdateForm
@@ -304,7 +336,7 @@ def collection(request):
                 # Redirect to the same view to avoid resubmitting the form on page reload
                 return redirect('collection')
     else:
-        add_form = AddActionForm()
+        add_form = ActionCreationForm()
         update_form = ActionUpdateForm()
 
     context = {'actions': actions, 
@@ -314,7 +346,6 @@ def collection(request):
                'add_form': add_form,
                'update_form': update_form}
     return render(request, 'collection.html', context)
-
 
 def overdue120d(client):
     # Get the sum of all cycles for the client's bills
@@ -326,7 +357,7 @@ def overdue120d(client):
 
     # Update the overdue120 field in the Client model
     client.overdue120 = total_cycles_sum
-    client.save() 
+    client.save()
 
 def download_excel(request):
     file_path = 'sorted_aging_report.xlsx'
@@ -339,19 +370,18 @@ def download_excel(request):
         return HttpResponse("File not found", status=404)
     
 def update_client_balance(client):
-    # Get the sum of all cycles for the client's bills
-    total_cycles_sum = Bill.objects.filter(short_name=client).aggregate(
-        total_cycles_sum=Sum('cycle1') + Sum('cycle2') + Sum('cycle3') + Sum('cycle4') + Sum('cycle5') +
-                        Sum('cycle6') + Sum('cycle7') + Sum('cycle8') + Sum('cycle9')
-    )['total_cycles_sum'] or Decimal('0.00')
+    # Get the sum of the 'balance' field for the client's bills
+    total_balance_sum = Bill.objects.filter(short_name=client).aggregate(
+        total_balance_sum=Sum('balance')
+    )['total_balance_sum'] or Decimal('0.00')
 
-    # Round the total_cycles_sum to two decimal places
-    total_cycles_sum = round(total_cycles_sum, 2)
+    # Round the total_balance_sum to two decimal places
+    total_balance_sum = round(total_balance_sum, 2)
 
     # Update the balance field in the Client model
-    client.balance = total_cycles_sum
+    client.balance = total_balance_sum
     client.save()
-    
+   
 def client(request):
     clients = Client.objects.all()
     return render(request , 'client.html' ,  {'clients': clients})
@@ -431,12 +461,6 @@ def create_actions_for_due_bills():
                     completed=False
                 )
 
-
-
-from django.http import JsonResponse
-from django.core.serializers.json import DjangoJSONEncoder
-from .models import Client, Bill
-
 def get_client_names(request):
     # Query all clients and their associated bill numbers
     client_data = (
@@ -456,10 +480,17 @@ def get_client_names(request):
 
     return JsonResponse({'client_data': client_data_list}, encoder=DjangoJSONEncoder, safe=False)
 
-
-
-
-
+# AJAX
+def load_bills(request):
+    client_id = request.GET.get('client_id')
+    client = get_object_or_404(Client, pk=client_id)
+    bills = Bill.objects.filter(short_name=client).order_by('bill_no')
+    
+    options = '<option value="">---------</option>'
+    for bill in bills:
+        options += f'<option value="{bill.id}">{bill.bill_no}</option>'
+    
+    return HttpResponse(options)
 
 
     
