@@ -2,6 +2,9 @@ from datetime import date
 from django import forms
 from .models import Client,Action,Bill
 
+from django.utils import timezone
+
+
 class ExcelUploadForm(forms.Form):
     file = forms.FileField(widget=forms.ClearableFileInput(attrs={'class': 'dropify'}))
 
@@ -37,10 +40,19 @@ class ActionUpdateForm(forms.ModelForm):
 
     
 
+from django import forms
+
 class ActionCreationForm(forms.ModelForm):
     class Meta:
         model = Action
-        fields = '__all__'
+        exclude = ['action_amount']  # Exclude action_amount from form fields
+
+    action_date = forms.DateField(initial=timezone.now(), widget=forms.DateInput(attrs={'readonly': 'readonly'}))
+
+    action_type = forms.ChoiceField(
+        choices=Action.ACTION_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'btn btn-primary waves-effect waves-light'})
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

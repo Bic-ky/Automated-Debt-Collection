@@ -306,16 +306,41 @@ def collection(request):
     today_date = date.today()
     add_form = ActionCreationForm(initial={'action_date': today_date})
     update_form = ActionUpdateForm()
-    
     if request.method == 'POST':
-        # Check if the form submitted is the ActionCreationForm
         if 'add_action' in request.POST:
             add_form = ActionCreationForm(request.POST)
-            if add_form.is_valid():
+            print(request.POST)
+            type = request.POST.get('type')
+            action_type = request.POST.get('action_type')
+            bill_no_id = request.POST.get('bill_no')
+            short_name_id = request.POST.get('short_name')
+            
+            # Check if 'completed' is present and set the value accordingly
+            completed = 'completed' in request.POST
+            
+            # Fetch the related objects
+            bill_no = Bill.objects.get(pk=bill_no_id)
+            short_name = Client.objects.get(pk=short_name_id)
+
+            # Set the action_amount to the balance of the corresponding bill
+            action_amount = bill_no.balance if hasattr(bill_no, 'balance') else 0
+
+            # Create an Action instance and save it to the database
+            action_instance = Action(
+                action_date=today_date,
+                type=type,
+                action_type=action_type,
+                action_amount=action_amount,
+                bill_no=bill_no,
+                short_name=short_name,
+                completed=completed,
+            )
+            action_instance.save()
+
+            return redirect('collection')
+
+
                 
-                # Redirect to the same view to avoid resubmitting the form on page reload
-                add_form.save()
-                return redirect('collection')
 
         # Check if the form submitted is the ActionUpdateForm
         elif 'update_actions' in request.POST:
@@ -346,6 +371,9 @@ def collection(request):
                'add_form': add_form,
                'update_form': update_form}
     return render(request, 'collection.html', context)
+
+
+
 
 def overdue120d(client):
     # Get the sum of all cycles for the client's bills
