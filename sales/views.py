@@ -292,38 +292,45 @@ def upload_excel(request):
 
     return render(request, 'upload.html', context)
 
+from django.contrib import messages
+
 def collection(request):
     clients = Client.objects.all()
     actions = Action.objects.all() 
+    
     
     # Calculate the count of manual actions that are not completed
     manual_not_completed_count = Action.objects.filter(type='manual', completed=False).count()
     auto_count = Action.objects.filter(type='auto', completed=False).count()
    
-
-    
     # Set the initial value of the "Action Date" field to today's date
     today_date = date.today()
     add_form = ActionCreationForm(initial={'action_date': today_date})
     update_form = ActionUpdateForm()
     if request.method == 'POST':
+        
         if 'add_action' in request.POST:
-            add_form = ActionCreationForm(request.POST)
-            print(request.POST)
-            type = request.POST.get('type')
             action_type = request.POST.get('action_type')
             bill_no_id = request.POST.get('bill_no')
             short_name_id = request.POST.get('short_name')
             
-            # Check if 'completed' is present and set the value accordingly
-            completed = 'completed' in request.POST
-            
+            # Validate that required fields are present
+            if not (action_type ):
+                messages.error(request, 'Action type is  required')
+                return redirect('collection')
+
             # Fetch the related objects
-            bill_no = Bill.objects.get(pk=bill_no_id)
-            short_name = Client.objects.get(pk=short_name_id)
+            try:
+                bill_no = Bill.objects.get(pk=bill_no_id)
+                short_name = Client.objects.get(pk=short_name_id)
+            except (Bill.DoesNotExist, Client.DoesNotExist):
+                messages.error(request, 'Invalid bill number or short name.')
+                return redirect('collection')
 
             # Set the action_amount to the balance of the corresponding bill
             action_amount = bill_no.balance if hasattr(bill_no, 'balance') else 0
+
+            type = 'manual'  # Set the type to 'manual'
 
             # Create an Action instance and save it to the database
             action_instance = Action(
@@ -333,15 +340,12 @@ def collection(request):
                 action_amount=action_amount,
                 bill_no=bill_no,
                 short_name=short_name,
-                completed=completed,
+                completed=False,
             )
             action_instance.save()
 
             return redirect('collection')
-
-
                 
-
         # Check if the form submitted is the ActionUpdateForm
         elif 'update_actions' in request.POST:
             update_form = ActionUpdateForm(request.POST)
@@ -371,8 +375,6 @@ def collection(request):
                'add_form': add_form,
                'update_form': update_form}
     return render(request, 'collection.html', context)
-
-
 
 
 def overdue120d(client):
