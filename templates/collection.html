@@ -10,7 +10,7 @@
               {% include "alerts.html" %}
               <button type="button" class="btn btn-warning waves-effect waves-light" data-toggle="modal" data-target="#exampleModalLong">
                 Add Action
-            </button>
+              </button>
                
                 </div>
                 <br>
@@ -48,14 +48,12 @@
                 <div class="col-12">
                         <div class="card-body">
                             
-                        
-
                         <!-- Update Actions Form -->
                         <form method="post" action="{% url 'collection' %}">
                           {% csrf_token %}
-                          <table id="basic-datatable" class="table">
+                          <table id="manual-datatable" class="table custom-datatable">
                               <thead>
-                                  <tr>
+                                <tr style="background:#d1e4f6;">
                                       <th>Completed</th>
                                       <th>Action Date</th>
                                       <th>Action Type</th>
@@ -106,7 +104,7 @@
 
                         
                               
-                        </div> <!-- end card body-->
+                </div> <!-- end card body-->
                  
                 </div><!-- end col-->
             </div>
@@ -117,11 +115,9 @@
             <div class="row">
                 <div class="col-12">
                         <div class="card-body">
-                            
-                            
-                                <table id="basic-datatable" class="table">
+                          <table id="auto-datatable" class="table custom-datatable"> 
                                   <thead>
-                                    <tr>
+                                    <tr style="background:#d1e4f6;">
                                       
                                       <th>Action Date</th>
                                       <th>Action Type</th>
@@ -164,8 +160,6 @@
                                     {% endfor %}
                                   </tbody>
                                 </table>
-                              
-                              
                         </div> <!-- end card body-->
                  
                 </div><!-- end col-->
@@ -176,11 +170,9 @@
             <div class="row">
                 <div class="col-12">
                         <div class="card-body">
-                            
-                            
-                                <table id="basic-datatable" class="table">
+                          <table id="history-datatable" class="table custom-datatable">
                                   <thead>
-                                    <tr>
+                                    <tr style="background:#d1e4f6;">
                                       
                                       <th>Action Date</th>
                                       <th>Action Type</th>
@@ -231,7 +223,7 @@
             <!-- end row-->
         </div>
     </div>
-        </div> <!-- end card-body-->
+    </div> <!-- end card-body-->
     </div> <!-- end card-->
 </div> <!-- end col -->
 
@@ -250,40 +242,35 @@
               <!-- Add Action Form -->
               <form method="post" id="actionForm" data-bills-url="{% url 'load_bills' %}">
                 {% csrf_token %}
-                
                 <!-- Render each form field individually -->
                 <label >Action Date:</label>
                 {{ add_form.action_date }}
                 <br>
-                
-
-                <div class="form-group mb-0">
-                  <label>Action Type</label>
-                  <br/>
-                  <div class="col mt-1">
-                      <div class="btn-group btn-group-toggle waves-effect waves-light bg-color-primary" data-toggle="buttons">
-                          <label class="btn btn-danger {% if add_form.action_type.value == 'Email' %}active{% endif %}">
-                              <input type="radio"  class="btn btn-secondary waves-effect waves-light" data-toggle="tooltip" data-placement="bottom" title="Selected" name="{{ add_form.action_type.name }}" value="Email" {% if add_form.action_type.value == 'Email' %}checked{% endif %}/>
-                              <i class="mdi mdi-gmail"></i> Email
-                          </label>
-                          
-                          <label class="btn btn-warning {% if add_form.action_type.value == 'SMS' %}active{% endif %}">
-                              <input type="radio" name="{{ add_form.action_type.name }}" value="SMS" {% if add_form.action_type.value == 'SMS' %}checked{% endif %}/>
-                              <i class="mdi mdi-message"></i> SMS
-                          </label>
-                          
-                          <label class="btn btn-success {% if add_form.action_type.value == 'Call' %}active{% endif %}">
-                              <input type="radio" name="{{ add_form.action_type.name }}" value="Call" {% if add_form.action_type.value == 'Call' %}checked{% endif %}/>
-                              <i class="mdi mdi-phone"></i> Call
-                          </label>
-                      </div>
-                  </div>
-              </div>
-              
-              
-                
-              
-            
+                  <div class="form-group mb-0">
+                    <label>Action Type</label>
+                    <br/>
+                    <div class="col mt-1">
+                        <div class="btn-group btn-group-toggle waves-effect waves-light bg-color-primary" data-toggle="buttons">
+                            <label class="btn btn-danger {% if add_form.action_type.value == 'Email' %}active{% endif %}">
+                                <input type="radio"  class="btn btn-secondary waves-effect waves-light" data-toggle="tooltip" data-placement="bottom" title="Selected" name="{{ add_form.action_type.name }}" value="Email" {% if add_form.action_type.value == 'Email' %}checked{% endif %}/>
+                                <i class="mdi mdi-gmail"></i> Email
+                            </label>
+                            
+                            <label class="btn btn-warning {% if add_form.action_type.value == 'SMS' %}active{% endif %}">
+                                <input type="radio" class="btn btn-secondary waves-effect waves-light" data-toggle="tooltip" data-placement="bottom" title="Selected"
+                                 name="{{ add_form.action_type.name }}" 
+                                 value="SMS" {% if add_form.action_type.value == 'SMS' %}checked{% endif %}/>
+                                <i class="mdi mdi-message"></i> SMS
+                            </label>
+                            
+                            
+                            <label class="btn btn-success {% if add_form.action_type.value == 'Call' %}active{% endif %}">
+                                <input type="radio" class="btn btn-secondary waves-effect waves-light" data-toggle="tooltip" data-placement="bottom" title="Selected" name="{{ add_form.action_type.name }}" value="Call" {% if add_form.action_type.value == 'Call' %}checked{% endif %}/>
+                                <i class="mdi mdi-phone"></i> Call
+                            </label>
+                        </div>
+                    </div>
+                </div>
                 <br>
                 <label for="{{ add_form.short_name.id_for_label }}">Client:</label>
                 {{ add_form.short_name }}
@@ -308,6 +295,13 @@
 </div>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 
+<script>
+  $(document).ready(function () {
+      $('.custom-datatable').DataTable();
+  });
+</script>
+
+
   <script>
     $(document).ready(function() {
         $("#id_short_name").change(function () {
@@ -328,6 +322,8 @@
             });
         });
     });
+
+
 </script>
 
 <!-- Include Switchery JavaScript -->

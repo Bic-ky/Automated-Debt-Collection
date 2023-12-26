@@ -164,7 +164,67 @@
                         <span class="d-none d-lg-block">History </span>
                     </a>
                 </li>
+                <hr>
             </ul>
+            <br><br> <h5 class="mb-4"><i class="mdi mdi-calendar-check"></i> Actions to do :</h5>
+            {% if last_actions_for_bills %}
+            <div class="alert " role="alert">
+                    
+
+                        <table id="manual-datatable" class="table custom-datatable">
+                            <thead>
+                              <tr class="alert alert-danger">
+                                    <th>Completed</th>
+                                    <th>Action Date</th>
+                                    <th>Action Type</th>
+                                    <th>Action Amount</th>
+                                    <th>Bill No.</th>
+                                   
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bill, last_action in last_actions_for_bills.items %}
+                                {% if last_action %}
+                                {% if not last_action.completed and last_action.type == 'manual' %}
+                                <tr>
+                                    <td class="text-center" style="width: 10px;">
+                                        <input type="checkbox" name="completed_actions" value="{{ last_action.id }}">
+                                    </td>
+                                    <td>{{ last_action.action_date }}</td>
+                                    {% if last_action.action_type == 'SMS' %}
+                                    <td>
+                                        <button type="button" class="btn btn-warning waves-effect waves-light" style="width: 150px;">
+                                            <i class="mdi mdi-message"></i> {{ last_action.action_type }}
+                                        </button>
+                                    </td>
+                                    {% elif last_action.action_type == 'Call' %}
+                                    <td>
+                                        <button type="button" class="btn btn-success waves-effect waves-light" style="width: 150px;">
+                                            <i class="mdi mdi-phone"></i> {{ last_action.action_type }}
+                                        </button>
+                                    </td>
+                                    {% elif last_action.action_type == 'Email' %}
+                                    <td>
+                                        <button type="button" class="btn btn-danger waves-effect waves-light" style="width: 150px;">
+                                            <i class="mdi mdi-gmail"></i> {{ last_action.action_type }}
+                                        </button>
+                                    </td>
+                                    {% endif %}
+                                    <td>Rs {{ last_action.action_amount }}</td>
+                                    <td>{{ last_action.bill_no}}</td>
+                                   
+                                </tr>
+                                {% endif %}
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                </ul>
+            </div>
+        {% endif %}
+        
+        
 
             <div class="tab-content">
                 <div class="tab-pane show active" id="collection">
@@ -173,12 +233,12 @@
                             <h4 class="card-title">Collection</h4>
                             <table id="basic-datatable" class="table active">
                                 <thead>
-                                    <tr>
+                                    <tr style="background:#d1e4f6;">
                                         <th>#</th>
                                         <th>Bill no. </th>
                                         <th>Due date</th>
                                         <th>Over due </th>
-                                        <th>Status</th>
+                                        <th>Overdue120</th>
                                         
                                     </tr>
                                 </thead>
@@ -190,8 +250,8 @@
                                             <th scope="row">{{ forloop.counter }}</th>
                                             <td>{{ bill.bill_no }}</td>
                                             <td>{{ bill.due_date }}</td>
-                                            <td>{{ bill.due_date }}</td>
-                                            <td>{{ bill.due_date }}</td>
+                                            <td>{{ bill.balance }}</td>
+                                            <td>{{ bill.short_name.overdue120 }}</td>
                                             <!-- Add more columns for bill information -->
                                         </tr>
                                     {% endfor %}

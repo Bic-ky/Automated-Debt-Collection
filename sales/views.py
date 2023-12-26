@@ -416,10 +416,26 @@ def client(request):
     clients = Client.objects.all()
     return render(request , 'client.html' ,  {'clients': clients})
 
+from django.db.models import Max, Q  # Import Max and Q
+
 def client_profile(request, client_id):
     client = get_object_or_404(Client, id=client_id)
-    bills = client.bill_set.all()  # Assuming you have a related name 'bill_set' in your Client model
-    return render(request, 'client_profile.html', {'client': client, 'bills': bills})
+    bills = client.bill_set.all()
+
+    last_actions_for_bills = {}
+    for bill in bills:
+        last_action = Action.objects.filter(bill_no=bill).order_by('-action_date').first()
+        last_actions_for_bills[bill] = last_action
+        
+    print(last_actions_for_bills)
+    context = {
+        'client': client,
+        'bills':bills ,
+        'last_actions_for_bills': last_actions_for_bills,
+    }
+
+    return render(request, 'client_profile.html', context)
+    
 
 def edit_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
