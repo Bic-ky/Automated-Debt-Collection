@@ -25,6 +25,12 @@ from django.http import JsonResponse
 from django.core.serializers.json import DjangoJSONEncoder
 from .models import Client, Bill
 from datetime import date
+from django.core.exceptions import ObjectDoesNotExist
+import requests
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db.models import Max, Q  # Import Max and Q
+from django.contrib import messages
 # Create your views here.
 
 def profile(request):
@@ -250,8 +256,7 @@ def upload_excel(request):
                         update_client_balance(client)
                         overdue120d(client)
                         
-                        # Call the function to create actions for due bills
-                        create_actions_for_due_bills()
+                        
                         
                         
                         
@@ -259,6 +264,7 @@ def upload_excel(request):
                         error_messages.append(f'Client "{short_name_value}" not found at row {index + 2}\n')
                     except ValidationError as e:
                         error_messages.append(f'Validation error at row {index + 2}: {e}\n')
+                
                 
                 
                 if success_count > 0:
@@ -271,12 +277,14 @@ def upload_excel(request):
                     messages.success(request, success_message)
                 for error_message in error_messages:
                     messages.error(request, error_message)
-                    
+                
+                # Call the function to create actions for due bills
+                create_actions_for_due_bills()  
                 return redirect('upload_excel')
 
             except Exception as e:
                 error_messages.append(f'Error processing Excel file: {e}')
-        
+            
     else:
         form = ExcelUploadForm()
 
@@ -292,7 +300,6 @@ def upload_excel(request):
 
     return render(request, 'upload.html', context)
 
-from django.contrib import messages
 
 def collection(request):
     clients = Client.objects.all()
@@ -376,7 +383,6 @@ def collection(request):
                'update_form': update_form}
     return render(request, 'collection.html', context)
 
-
 def overdue120d(client):
     # Get the sum of all cycles for the client's bills
     total_cycles_sum = Bill.objects.filter(short_name=client).aggregate(
@@ -420,22 +426,8 @@ from django.db.models import Max, Q  # Import Max and Q
 
 def client_profile(request, client_id):
     client = get_object_or_404(Client, id=client_id)
-    bills = client.bill_set.all()
-
-    last_actions_for_bills = {}
-    for bill in bills:
-        last_action = Action.objects.filter(bill_no=bill).order_by('-action_date').first()
-        last_actions_for_bills[bill] = last_action
-        
-    print(last_actions_for_bills)
-    context = {
-        'client': client,
-        'bills':bills ,
-        'last_actions_for_bills': last_actions_for_bills,
-    }
-
-    return render(request, 'client_profile.html', context)
-    
+    bills = client.bill_set.all()  # Assuming you have a related name 'bill_set' in your Client model
+    return render(request, 'client_profile.html', {'client': client, 'bills': bills})
 
 def edit_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
@@ -467,45 +459,67 @@ def add_client(request):
 
     return render(request, 'add_client.html', {'form': form, 'client': None})
 
+from datetime import timedelta
+
+import logging
+
 def create_actions_for_due_bills():
     # Get today's date
     today = timezone.now().date()
 
-    # Define the due date differences and corresponding action types
-    due_date_diff_types = [
-        (3, 'SMS', 'auto'),
-        (5, 'SMS', 'auto'),
-        (6, 'Call', 'manual'),
-    ]
+    # Set up logging
+    logger = logging.getLogger(__name__)
 
-    # Iterate through the due date differences and create actions for bills
-    for due_date_diff, action_type, action_mode in due_date_diff_types:
-        # Calculate the target date based on the due date difference
-        target_date = today - timedelta(days=due_date_diff)
+    try:
+        # Iterate through bills and create actions based on new specifications
+        for bill in Bill.objects.all():
+            # Calculate the target date by adding grant_period to the created date
+            target_date = bill.due_date + timedelta(days=bill.short_name.grant_period)
+            
+            
+            # Calculate the difference between today and the target date
+            date_difference = (today - target_date).days
 
-        # Get overdue bills with due dates equal to the target date
-        bills_to_process = Bill.objects.filter(due_date=target_date, balance__gt=0)
+            # Determine action_type and subtype based on date_difference and client group
+            action_type = None
+            subtype = None
+            if  date_difference == 0:
+                action_type = 'SMS'
+                subtype = 'Reminder'
+            elif 1 <= date_difference <= 3:
+                action_type = 'SMS'
+                subtype = 'Gentle'
+            elif 3 <= date_difference <=6:
+                action_type = 'SMS'
+                subtype = 'Strong'
+            elif date_difference >= 7 and bill.short_name.group == 'Normal':
+                action_type = 'SMS'
+                subtype = 'Final'
 
-        # Iterate through bills and create actions
-        for bill in bills_to_process:
-            # Check if an action for the same bill, action type, and mode already exists
-            existing_action = Action.objects.filter(
-                bill_no=bill.bill_no,
-                action_type=action_type,
-                type='manual' if action_mode == 'manual' else 'auto'
-            ).first()
+            # Log values for debugging
+            logger.info(f"Bill: {bill.bill_no}, Date Difference: {date_difference}, Action Type: {action_type}, Subtype: {subtype}")
 
-            # Create the action only if it doesn't already exist
-            if not existing_action:
+            # Create the action only if action_type and subtype are determined
+            if action_type and subtype:
+                bill_instance = Bill.objects.get(bill_no=bill.bill_no)
                 Action.objects.create(
                     action_date=today,
-                    type='manual' if action_mode == 'manual' else 'auto',
+                    type='auto',
                     action_type=action_type,
                     action_amount=bill.balance,
                     short_name=bill.short_name,
-                    bill_no=bill.bill_no,
-                    completed=False
+                    bill_no=bill_instance,
+                    completed=False,
+                    subtype=subtype
                 )
+            print(f"Bill: {bill.bill_no}, Date Difference: {date_difference}, Action Type: {action_type}, Subtype: {subtype}")
+
+    except Exception as e:
+        # Log any exceptions that occur
+        logger.exception(f"Error in create_actions_for_due_bills: {e}")
+
+
+
 
 def get_client_names(request):
     # Query all clients and their associated bill numbers
@@ -538,5 +552,46 @@ def load_bills(request):
     
     return HttpResponse(options)
 
+@receiver(post_save, sender=Action)
+def check_and_trigger_sms(sender, instance, **kwargs):
+    # Check if the action type is 'auto' and action_type is 'SMS'
+    if instance.type == 'auto' and instance.action_type == 'SMS':
+        try:
+            # `Client` has a ForeignKey to `Action` named `actions`
+            client = instance.short_name
+            phone_number = client.phone_number
+
+            # Trigger send_sms_otp function
+            send_sms(phone_number)
+
+        except ObjectDoesNotExist:
+            # Handle the case where the related client is not found
+            print("Client not found for the given Action.")
+
+        except Exception as e:
+            # Handle any other exceptions that might occur
+            print(f"Error occurred: {e}")
+            
+def send_sms(phone_number):
+    url = "http://api.sparrowsms.com/v2/sms/"
+    data = {
+        'token': 'v2_4Bg0gTIExiCMGTN1GDd9bsUEytF.wHW',
+        'from': 'Demo',
+        'to': phone_number,
+        'text': f'Gentle Reminder Tech team loves you Merry Christmas ',
+    }
+
+    response = requests.post(url, data=data)
+    print(response)
+
+    if response.status_code == 200:
+        status_code = response.status_code
+        response_text = response.text
+        response_json = response.json()
+
+        return status_code, response_text
+
+    else:
+        return HttpResponse("Error occurred {}".format(response.text))
 
     
