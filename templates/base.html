@@ -43,7 +43,7 @@
 
     <body>
         
-        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        
         <!-- Begin page -->
         <div id="layout-wrapper">
             <div class="header-border"></div>
@@ -145,7 +145,7 @@
 
                             <li>
                                 <a href="{% url "upload_excel" %}" class="waves-effect"><i
-                                        class="mdi mdi-upload "></i><span>Upload File</span></a>
+                                        class="mdi mdi-database-import "></i><span>Upload File</span></a>
                                 
                             </li>
                             <li>
@@ -155,7 +155,10 @@
                             </li>
                             <li>
                                 <a href="{% url "collection" %}" class="waves-effect"><i
-                                        class="mdi mdi-coin "></i><span>Collection</span></a>
+                                        class="mdi mdi-coin "></i>
+                                        <span>Collection
+                                           
+                                        </span> <span style="margin-bottom:4px;"class="badge badge-danger badge-pill">{{ total_count }}</span></a>
                                 
                             </li>
                         </ul>

@@ -1,36 +1,28 @@
 from django.forms import ValidationError
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from . models import Client,Bill,Action
+from .models import Client, Bill, Action
 from .resources import BillResource
 from django.contrib import messages
-from .forms import ExcelUploadForm  
-from django.core.exceptions import ValidationError
-import pandas as pd
-from IPython.display import FileLink
-from django.http import FileResponse, HttpResponse
+from .forms import ExcelUploadForm, ClientForm, ActionUpdateForm, ActionCreationForm
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.http import FileResponse, HttpResponse, JsonResponse
 from django.core.files.storage import default_storage
 from pandas.errors import EmptyDataError
 from nepali_date_converter import english_to_nepali_converter, nepali_to_english_converter
-from django.db.models import Sum,F
+from django.db.models import Sum, F, Max, Q
 from decimal import Decimal
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Client
-from .forms import ClientForm
-from .forms import ActionUpdateForm,ActionCreationForm
-from datetime import timedelta
+from IPython.display import FileLink
 from django.utils import timezone
-from django.http import JsonResponse
-from django.core.serializers.json import DjangoJSONEncoder
-from .models import Client, Bill
-from datetime import date
-from django.core.exceptions import ObjectDoesNotExist
+import pandas as pd
 import requests
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.db.models import Max, Q  # Import Max and Q
-from django.contrib import messages
+from django.core.serializers.json import DjangoJSONEncoder
+import logging
+from django.template import Context, Template
+
 # Create your views here.
 
 def profile(request):
@@ -300,7 +292,6 @@ def upload_excel(request):
 
     return render(request, 'upload.html', context)
 
-
 def collection(request):
     clients = Client.objects.all()
     actions = Action.objects.all() 
@@ -320,6 +311,9 @@ def collection(request):
             action_type = request.POST.get('action_type')
             bill_no_id = request.POST.get('bill_no')
             short_name_id = request.POST.get('short_name')
+            description=request.POST.get('description')
+            subtype=request.POST.get('subtype')
+            
             
             # Validate that required fields are present
             if not (action_type ):
@@ -347,6 +341,8 @@ def collection(request):
                 action_amount=action_amount,
                 bill_no=bill_no,
                 short_name=short_name,
+                description=description,
+                subtype=subtype,
                 completed=False,
             )
             action_instance.save()
@@ -422,8 +418,6 @@ def client(request):
     clients = Client.objects.all()
     return render(request , 'client.html' ,  {'clients': clients})
 
-from django.db.models import Max, Q  # Import Max and Q
-
 def client_profile(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     bills = client.bill_set.all()  # Assuming you have a related name 'bill_set' in your Client model
@@ -459,10 +453,6 @@ def add_client(request):
 
     return render(request, 'add_client.html', {'form': form, 'client': None})
 
-from datetime import timedelta
-
-import logging
-
 def create_actions_for_due_bills():
     # Get today's date
     today = timezone.now().date()
@@ -475,51 +465,51 @@ def create_actions_for_due_bills():
         for bill in Bill.objects.all():
             # Calculate the target date by adding grant_period to the created date
             target_date = bill.due_date + timedelta(days=bill.short_name.grant_period)
-            
-            
+
             # Calculate the difference between today and the target date
             date_difference = (today - target_date).days
 
             # Determine action_type and subtype based on date_difference and client group
             action_type = None
             subtype = None
-            if  date_difference == 0:
+            if date_difference == 0:
                 action_type = 'SMS'
                 subtype = 'Reminder'
             elif 1 <= date_difference <= 3:
                 action_type = 'SMS'
                 subtype = 'Gentle'
-            elif 3 <= date_difference <=6:
+            elif 3 <= date_difference <= 6:
                 action_type = 'SMS'
                 subtype = 'Strong'
-            elif date_difference >= 7 and bill.short_name.group == 'Normal':
+            elif date_difference == 7 and bill.short_name.group == 'Normal':
                 action_type = 'SMS'
                 subtype = 'Final'
 
             # Log values for debugging
             logger.info(f"Bill: {bill.bill_no}, Date Difference: {date_difference}, Action Type: {action_type}, Subtype: {subtype}")
 
-            # Create the action only if action_type and subtype are determined
-            if action_type and subtype:
-                bill_instance = Bill.objects.get(bill_no=bill.bill_no)
-                Action.objects.create(
-                    action_date=today,
-                    type='auto',
-                    action_type=action_type,
-                    action_amount=bill.balance,
-                    short_name=bill.short_name,
-                    bill_no=bill_instance,
-                    completed=False,
-                    subtype=subtype
-                )
-            print(f"Bill: {bill.bill_no}, Date Difference: {date_difference}, Action Type: {action_type}, Subtype: {subtype}")
+            # Check if an action already exists for the given bill
+            if Action.objects.filter(bill_no=bill, subtype=subtype).exists():
+                logger.info(f"Action already exists for Bill: {bill.bill_no}. Skipping creation.")
+            else:
+                # Create the action only if action_type and subtype are determined
+                if action_type and subtype:
+                    bill_instance = Bill.objects.get(bill_no=bill.bill_no)
+                    Action.objects.create(
+                        action_date=today,
+                        type='auto',
+                        action_type=action_type,
+                        action_amount=bill.balance,
+                        short_name=bill.short_name,
+                        bill_no=bill_instance,
+                        completed=False,
+                        subtype=subtype
+                    )
+                    logger.info(f"Action created for Bill: {bill.bill_no}")
 
     except Exception as e:
         # Log any exceptions that occur
         logger.exception(f"Error in create_actions_for_due_bills: {e}")
-
-
-
 
 def get_client_names(request):
     # Query all clients and their associated bill numbers
@@ -552,17 +542,47 @@ def load_bills(request):
     
     return HttpResponse(options)
 
+def send_sms(phone_number, sms_content):
+    url = "https://api.sparrowsms.com/v2/sms/"
+    data = {
+        'token': 'v2_M1vtw2aeNOXETkVFSgoOXmOchwN.BqR',
+        'from': 'Demo',
+        'to': phone_number,
+        'text': sms_content,
+    }
+
+    response = requests.post(url, data=data)
+    print(response.text)
+
+    if response.status_code == 200:
+        # If SMS is successfully sent, return a tuple indicating success
+        return True, response.text
+    else:
+        # If there is an error, return a tuple indicating failure
+        return False, response.text
+
 @receiver(post_save, sender=Action)
 def check_and_trigger_sms(sender, instance, **kwargs):
-    # Check if the action type is 'auto' and action_type is 'SMS'
-    if instance.type == 'auto' and instance.action_type == 'SMS':
-        try:
-            # `Client` has a ForeignKey to `Action` named `actions`
-            client = instance.short_name
-            phone_number = client.phone_number
+    # Disconnect the signal to prevent it from triggering multiple times
+    post_save.disconnect(check_and_trigger_sms, sender=Action)
 
-            # Trigger send_sms_otp function
-            send_sms(phone_number)
+    # Check if the action type is 'auto' and action_type is 'SMS'
+    if instance.type == 'auto' and instance.action_type == 'SMS' and instance.completed == False:
+        try:
+            # Fetch related client and bill
+            client = instance.short_name
+            bill = instance.bill_no
+
+            # Get dynamic SMS content based on subtype
+            sms_content = generate_sms_text(instance.subtype, client, bill)
+
+            # Trigger send_sms function
+            success, response_text = send_sms(client.phone_number, sms_content)
+
+            if success:
+                # Update the 'completed' field to True if SMS is sent successfully
+                instance.completed = True
+                instance.save()
 
         except ObjectDoesNotExist:
             # Handle the case where the related client is not found
@@ -571,27 +591,39 @@ def check_and_trigger_sms(sender, instance, **kwargs):
         except Exception as e:
             # Handle any other exceptions that might occur
             print(f"Error occurred: {e}")
-            
-def send_sms(phone_number):
-    url = "http://api.sparrowsms.com/v2/sms/"
-    data = {
-        'token': 'v2_4Bg0gTIExiCMGTN1GDd9bsUEytF.wHW',
-        'from': 'Demo',
-        'to': phone_number,
-        'text': f'Gentle Reminder Tech team loves you Merry Christmas ',
-    }
 
-    response = requests.post(url, data=data)
-    print(response)
+    # Reconnect the signal after processing
+    post_save.connect(check_and_trigger_sms, sender=Action)
 
-    if response.status_code == 200:
-        status_code = response.status_code
-        response_text = response.text
-        response_json = response.json()
+def generate_sms_text(subtype, client, bill):
+    # Default agent name (you can replace it with actual agent name)
+    agent_name = client.collector.full_name if client.collector else "Accounts Team"
 
-        return status_code, response_text
+    # Default contact number (you can replace it with actual contact number)
+    contact_number = "9800000001"
+
+    # Initialize template string based on subtype
+    template_str = ""
+
+    if subtype == 'Reminder':
+        template_str = "Dear {{ client.account_name }}, This is {{ agent_name }} from SparrowSMS. We'd like to remind you that payment for Nrs. {{ bill.balance }} will be due by {{ bill.due_date }}. For more information, call {{ contact_number }}."
+
+    elif subtype == 'Gentle':
+        template_str = "Dear {{ client.account_name }}, This is a gentle reminder that payment for Nrs. {{ bill.balance }} is outstanding on your account. Please send the payment and contact: {{ agent_name }} SPARROW SMS."
+
+    elif subtype == 'Strong':
+        template_str = "Dear {{ client.account_name }}, we still have not received Nrs {{ bill.balance }} payment due since {{ bill.due_date }}. We request you to make the payment as soon as possible. {{ contact_number }} SPARROW SMS."
+
+    elif subtype == 'Final':
+        template_str = "Dear {{ client.account_name }}, after several attempts and reminders, we have not received the due Nrs. {{ bill.balance }}. Unfortunately, service will be blocked. Contact us at {{ contact_number }}."
 
     else:
-        return HttpResponse("Error occurred {}".format(response.text))
+        return "Unknown subtype."
 
-    
+    # Render the template with dynamic data
+    template = Template(template_str)
+    context = Context({'client': client, 'bill': bill, 'agent_name': agent_name, 'contact_number': contact_number})
+    return template.render(context)
+
+
+

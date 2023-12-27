@@ -95,7 +95,7 @@ class Action(models.Model):
     # New field for SMS subtype
     subtype = models.CharField(max_length=20, choices=SMS_CHOICES, null=True, blank=True)
     
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True )
     completed = models.BooleanField(default=False)
 
     def __str__(self):
