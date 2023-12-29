@@ -15,7 +15,7 @@
         <link rel="shortcut icon" href="{% static "img/smslogo.ico" %}">
 
           <!-- Sweet Alerts css -->
-        <link href="{% static "plugins/sweetalert2/sweetalert2.min.css" %}" rel="stylesheet" type="text/css" />
+        <link href="{% static "assets/plugins/sweetalert2/sweetalert2.min.css" %}" rel="stylesheet" type="text/css" />
 
         <!-- App css -->
         <link href="{% static "assets/css/bootstrap.min.css" %}" rel="stylesheet" type="text/css" />
@@ -34,16 +34,17 @@
         <link href="{% static "assets/plugins/datatables/responsive.bootstrap4.css" %}" rel="stylesheet" type="text/css" />
         <link href="{% static "assets/plugins/datatables/buttons.bootstrap4.css" %}" rel="stylesheet" type="text/css" />
         <link href="{% static "assets/plugins/datatables/select.bootstrap4.css" %}" rel="stylesheet" type="text/css" />
+   
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
 
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10">
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+       
 
     </head>
 
-    <body>
-        
-        
+    <body>        
         <!-- Begin page -->
         <div id="layout-wrapper">
             <div class="header-border"></div>
@@ -161,6 +162,22 @@
                                         </span> <span style="margin-bottom:4px;"class="badge badge-danger badge-pill">{{ total_count }}</span></a>
                                 
                             </li>
+                            <li>
+                                <a href="{% url "auto" %}" class="waves-effect"><i class="mdi mdi-robot"></i>
+                                    <span>Automation</span></a>
+                                
+                            </li>
+                            <li>
+                                <a href="{% url "action" %}" class="waves-effect"><i class="mdi mdi-podcast"></i>
+
+                                <span>Action</span></a>
+                                
+                            </li>
+                            <li>
+                                <a href="{% url "aging" %}" class="waves-effect"><i class="mdi mdi-chart-bar"></i>
+                                    <span>Aging Report</span></a>
+                                
+                            </li>
                         </ul>
                     </div>
                     <!-- Sidebar -->
@@ -239,23 +256,23 @@
         </script>
 
         <!-- Sparkline Js-->
-        <script src="{% static "plugins/jquery-sparkline/jquery.sparkline.min.js" %}"></script>
+        <script src="{% static "assets/plugins/jquery-sparkline/jquery.sparkline.min.js" %}"></script>
 
         <!-- Chart Js-->
-        <script src="{% static "plugins/jquery-knob/jquery.knob.min.js" %}"></script>
+        <script src="{% static "assets/plugins/jquery-knob/jquery.knob.min.js" %}"></script>
 
         <!-- Chart Custom Js-->
         <script src="{% static "assets/pages/knob-chart-demo.js" %}"></script>
 
 
         <!-- Morris Js-->
-        <script src="{% static "plugins/morris-js/morris.min.js" %}"></script>
+        <script src="{% static "assets/plugins/morris-js/morris.min.js" %}"></script>
 
         <!-- Raphael Js-->
-        <script src="{% static "plugins/raphael/raphael.min.js" %}"></script>
+        <script src="{% static "assets/plugins/raphael/raphael.min.js" %}"></script>
 
         <!-- Custom Js -->
-        <script src="{% static "assets/pages/dashboard-demo.js" %}"></script>
+        {% comment %} <script src="{% static "assets/pages/dashboard-demo.js" %}"></script> {% endcomment %}
 
         <!-- App js -->
         <script src="{% static "assets/js/theme.js" %}"></script>
@@ -278,15 +295,16 @@
 
         <!-- Chart Js-->
         <script src="{% static "assets/plugins/chart-js/chart.min.js" %}"></script>
-         <!-- Sweet Alerts Js-->
-        <script src="{% static "plugins/sweetalert2/sweetalert2.min.js" %}"></script>
-
         
          <!-- Sweet Alerts Js-->
-        <script src="{% static "assets/pages/sweet-alert-demo.js" %}"></script>
-          
+        <script src="{% static "assets/plugins/sweetalert2/sweetalert2.min.js" %}"></script>
+
+        <!-- Chart Custom Js-->
+        <script src="{% static "assets/pages/chartjs-demo.js" %}"></script>
+
         <!-- Include Select2 library -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
 
     </body>
 

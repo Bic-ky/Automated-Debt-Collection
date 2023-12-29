@@ -77,7 +77,37 @@
     </div> <!-- end card-->
 </div> <!-- end col -->
 
+<script>
+    // Add a click event listener to the button
+document.getElementById('deleteButton').addEventListener('click', function (event) {
+    // Prevent the default action of the anchor tag
+    event.preventDefault();
+
+    // Display the confirmation dialog
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!"
+    }).then((result) => {
+        // Check if the user clicked the confirm button
+        if (result.isConfirmed) {
+            // Display the success message
+            Swal.fire({
+                title: "Deleted!",
+                text: "Your file has been deleted.",
+                icon: "success"
+            });
+
+            // Get the href attribute from the anchor tag and navigate to the URL
+            window.location.href = document.getElementById('deleteButton').getAttribute('href');
+        }
+    });
+});
+</script>
 <!-- end row-->
 {% endblock content %}
-
 

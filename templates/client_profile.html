@@ -1,6 +1,7 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% block content %}
+
 <div class="row">
     <div class="col-md-12">
 
@@ -43,7 +44,7 @@
                                 <h6 class="mb-3">Balance:</h6>
                             </div>
                             <div class="col-sm-9">
-                                {{ client.balance }}
+                                Rs {{ client.balance }}
                             </div>
                         </div>    
                     </div>
@@ -122,7 +123,7 @@
                                 <h6 class="mb-1">Credit Limit:</h6>
                             </div>
                             <div class="col-sm-9">
-                                {{ client.credit_limit }}
+                               Rs {{ client.credit_limit }}
                             </div>
                         </div>
                         
@@ -141,19 +142,14 @@
         <div class="card-body">
             <ul class="nav nav-tabs nav-justified mb-3">
                 <li class="nav-item">
-                    <a href="#collection" data-toggle="tab" aria-expanded="true" class="nav-link active">
+                    <a href="#collection" data-toggle="tab" aria-expanded="true" class="nav-link">
                         <i class="mdi mdi-home-variant d-lg-none d-block"></i>
                         <span class="d-none d-lg-block">Collection </span>
                     </a>
                 </li>
+                
                 <li class="nav-item">
-                    <a href="#risk" data-toggle="tab" aria-expanded="false" class="nav-link ">
-                        <i class="mdi mdi-account-circle d-lg-none d-block"></i>
-                        <span class="d-none d-lg-block">Risk Report</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#report" data-toggle="tab" aria-expanded="false" class="nav-link">
+                    <a href="#report" data-toggle="tab" aria-expanded="false" class="nav-link active">
                         <i class="mdi mdi-settings-outline d-lg-none d-block"></i>
                         <span class="d-none d-lg-block">Report & Indicators</span>
                     </a>
@@ -166,71 +162,104 @@
                 </li>
                 <hr>
             </ul>
-            <br><br> <h5 class="mb-4"><i class="mdi mdi-calendar-check"></i> Actions to do :</h5>
-            {% if last_actions_for_bills %}
-            <div class="alert " role="alert">
-                    
-
-                        <table id="manual-datatable" class="table custom-datatable">
-                            <thead>
-                              <tr class="alert alert-danger">
-                                    <th>Completed</th>
-                                    <th>Action Date</th>
-                                    <th>Action Type</th>
-                                    <th>Action Amount</th>
-                                    <th>Bill No.</th>
-                                   
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for bill, last_action in last_actions_for_bills.items %}
-                                {% if last_action %}
-                                {% if not last_action.completed and last_action.type == 'manual' %}
-                                <tr>
-                                    <td class="text-center" style="width: 10px;">
-                                        <input type="checkbox" name="completed_actions" value="{{ last_action.id }}">
-                                    </td>
-                                    <td>{{ last_action.action_date }}</td>
-                                    {% if last_action.action_type == 'SMS' %}
-                                    <td>
-                                        <button type="button" class="btn btn-warning waves-effect waves-light" style="width: 150px;">
-                                            <i class="mdi mdi-message"></i> {{ last_action.action_type }}
-                                        </button>
-                                    </td>
-                                    {% elif last_action.action_type == 'Call' %}
-                                    <td>
-                                        <button type="button" class="btn btn-success waves-effect waves-light" style="width: 150px;">
-                                            <i class="mdi mdi-phone"></i> {{ last_action.action_type }}
-                                        </button>
-                                    </td>
-                                    {% elif last_action.action_type == 'Email' %}
-                                    <td>
-                                        <button type="button" class="btn btn-danger waves-effect waves-light" style="width: 150px;">
-                                            <i class="mdi mdi-gmail"></i> {{ last_action.action_type }}
-                                        </button>
-                                    </td>
-                                    {% endif %}
-                                    <td>Rs {{ last_action.action_amount }}</td>
-                                    <td>{{ last_action.bill_no}}</td>
-                                   
-                                </tr>
-                                {% endif %}
-                                {% endif %}
-                                {% endfor %}
-                            </tbody>
-                        </table>
-
-                </ul>
-            </div>
-        {% endif %}
-        
-        
 
             <div class="tab-content">
-                <div class="tab-pane show active" id="collection">
+                <div class="tab-pane " id="collection">
                     <div class="col-12">
                         <div class="card-body">
-                            <h4 class="card-title">Collection</h4>
+                            
+                            {% if incomplete_actions %}
+    <br><br> <h5 class="mb-4"><i class="mdi mdi-calendar-check"></i> Actions to do :</h5>
+    <div class="alert " role="alert">
+        <table id="manual-datatable" class="table custom-datatable">
+            <thead>
+                <tr class="alert alert-danger">
+                    <th>Completed</th>
+                    <th>Action Date</th>
+                    <th>Action Type</th>
+                    <th>Action Amount</th>
+                    <th>Bill No.</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for action in incomplete_actions %}
+                <tr>
+                    <td class="text-center" style="width: 10px;">
+                        <input type="checkbox" name="completed_actions" value="{{ action.id }}">
+                    </td>
+                    <td>{{ action.action_date }}</td>
+                    {% if action.action_type == 'SMS' %}
+                        <td>
+                            <button type="button" class="btn btn-warning waves-effect waves-light" style="width: 150px;">
+                                <i class="mdi mdi-message"></i> {{ action.action_type }}
+                            </button>
+                        </td>
+                    {% elif action.action_type == 'Call' %}
+                        <td>
+                            <button type="button" class="btn btn-success waves-effect waves-light" style="width: 150px;">
+                                <i class="mdi mdi-phone"></i> {{ action.action_type }}
+                            </button>
+                        </td>
+                    {% elif action.action_type == 'Email' %}
+                        <td>
+                            <button type="button" class="btn btn-danger waves-effect waves-light" style="width: 150px;">
+                                <i class="mdi mdi-gmail"></i> {{ action.action_type }}
+                            </button>
+                        </td>
+                    {% endif %}
+                    <td>Rs  {{ action.action_amount }}</td>
+                    <td>{{ action.bill_no}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <hr style="color: red !important;">
+    </div>
+{% elif last_action %}
+    <br><br> <h5 class="mb-4"><i class="mdi mdi-calendar-check"></i> Recent Action:</h5>
+    <div class="alert " role="alert">
+        <table id="manual-datatable" class="table custom-datatable">
+            <thead>
+                <tr class="alert alert-danger">
+                    <th>Completed</th>
+                    <th>Action Date</th>
+                    <th class="text-center">Action Type</th>
+                    <th>Action Amount</th>
+                    <th>Bill No.</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-center" style="width: 10px;">
+                        <i class="mdi mdi-check" style="color: green;"></i>
+                    </td>
+                    <td>{{ last_action.action_date }}</td>
+                    {% if last_action.action_type == 'SMS' %}
+                        <td class="text-center">
+                            <a tabindex="0" class="btn btn-warning waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                            title="{{ last_action.subtype }}" data-content="{{ last_action.description }}"><i class="mdi mdi-message"></i> {{ last_action.action_type }}</a>
+                        </td>
+                    {% elif last_action.action_type == 'Call' %}
+                        <td class="text-center">
+                            <a tabindex="0" class="btn btn-success waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                            title="{{last_action.subtype}}" data-content="{{last_action.description}}"><i class="mdi mdi-phone"></i>  {{ last_action.action_type }}</a>
+                        </td>
+                    {% elif last_action.action_type == 'Email' %}
+                        <td class="text-center">
+                            <a tabindex="0" class="btn btn-danger waves-effect waves-light"  style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                            title="{{last_action.subtype}}" data-content="{{last_action.description}}"><i class="mdi mdi-gmail"></i>  {{ last_action.action_type }}</a>
+                        </td>
+                    {% endif %}
+                    <td>Rs  {{ last_action.action_amount }}</td>
+                    <td>{{ last_action.bill_no}}</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr style="color: red !important;">
+    </div>
+{% endif %}
+
+        
                             <table id="basic-datatable" class="table active">
                                 <thead>
                                     <tr style="background:#d1e4f6;">
@@ -246,12 +275,12 @@
                             
                                 <tbody>
                                     {% for bill in bills %}
-                                        <tr>
+                                    <tr style="background-color: #f2dede;">
                                             <th scope="row">{{ forloop.counter }}</th>
                                             <td>{{ bill.bill_no }}</td>
                                             <td>{{ bill.due_date }}</td>
-                                            <td>{{ bill.balance }}</td>
-                                            <td>{{ bill.short_name.overdue120 }}</td>
+                                            <td>Rs {{ bill.balance }}</td>
+                                            <td>Rs {{ bill.cycle9 }}</td>
                                             <!-- Add more columns for bill information -->
                                         </tr>
                                     {% endfor %}
@@ -261,94 +290,169 @@
                         </div> <!-- end card body-->
                     </div><!-- end col-->
                 </div>
-                <div class="tab-pane show" id="risk">
-                    <p>Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt.Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim.</p>
-                    <p class="mb-0">Leggings occaecat dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.</p>
-                </div>
-                <div class="tab-pane" id="report">
+                
+                <div class="tab-pane show active" id="report">
                     <!-- start page title -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="page-title-box d-flex align-items-center justify-content-between">
-                                <h4 class="mb-0 font-size-18">Chartjs</h4>
+                   
 
-                                <div class="page-title-right">
-                                    <ol class="breadcrumb m-0">
-                                        <li class="breadcrumb-item"><a href="javascript: void(0);">Charts</a></li>
-                                        <li class="breadcrumb-item active">Chartjs</li>
-                                    </ol>
+                    <div class="row">
+                        
+                    
+                        <div class="col-xl-8">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h4 class="card-title">Aging Report</h4>
+                                    <p class="card-subtitle mb-4">Aging Report of the Client</p>
+                                    <canvas id="barChart"></canvas>
                                 </div>
-                                
                             </div>
                         </div>
-                    </div>     
-                    <!-- end page title -->
-
-                    <div class="row">
-                        <div class="col-xl-6">
+                        <div class="col-xl-4">
                             <div class="card">
                                 <div class="card-body">
-                    
-                                    <h4 class="card-title">Line Chart</h4>
-                                    <p class="card-subtitle mb-4">Example of line chart chart js.</p>
-
-                                    <canvas id="lineChart"></canvas>
-                    
-                                </div> <!-- end card-body-->
-                            </div> <!-- end card-->
-                        </div> <!-- end col -->
-                    
-                        <div class="col-xl-6">
-                            <div class="card">
-                                <div class="card-body">
-                    
-                                    <h4 class="card-title">Bar Chart</h4>
-                                    <p class="card-subtitle mb-4">Example of bar chart chart js.</p>
-
-                                    <canvas id="barChart"></canvas>
-                    
-                                </div> <!-- end card-body-->
-                            </div> <!-- end card-->
-                        </div> <!-- end col -->
+                                    <h4 class="card-title">Aging Report</h4>
+                                    <p class="card-subtitle mb-4">Total Recievable: Rs <strong>{{client.balance}}</strong></p>
+                                    <h4 class="card-title">Monthly Aging:</h4>
+                                    <p class="card-subtitle mb-4">0-30days: <strong>{{ percentages.percentage_0_30_days }} %</strong></p>
+                                    <p class="card-subtitle mb-4">30-60days: <strong>{{ percentages.percentage_31_60_days }} %</strong></p>
+                                    <p class="card-subtitle mb-4">60-90days: <strong>{{ percentages.percentage_61_90_days }} %</strong></p>
+                                    <p class="card-subtitle mb-4">90days+: <strong>{{ percentages.percentage_90_days_plus }} %</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                        
                     </div>
                     <!-- end row-->
 
-                    <div class="row">
-                        <div class="col-xl-6">
-                            <div class="card">
-                                <div class="card-body">
                     
-                                    <h4 class="card-title">Area chart</h4>
-                                    <p class="card-subtitle mb-4">Example of line area chart js.</p>
-
-                                    <canvas id="areaChart"></canvas>
-                    
-                                </div> <!-- end card-body-->
-                            </div> <!-- end card-->
-                        </div> <!-- end col -->
-                    
-                        <div class="col-xl-6">
-                            <div class="card">
-                                <div class="card-body">
-                    
-                                    <h4 class="card-title">Pie chart</h4>
-                                    <p class="card-subtitle mb-4">Example of line pie chart js.</p>
-
-                                    <canvas id="pieChart"></canvas>
-                    
-                                </div> <!-- end card-body-->
-                            </div> <!-- end card-->
-                        </div> <!-- end col -->
-                    </div>
                     <!-- end row-->
                 </div>
-                <div class="tab-pane" id="history">
-                    <p>Food truck quinoa dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.</p>
-                    <p class="mb-0">Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt.Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim.</p>
+                <div class="tab-pane " id="history">
+                    <div class="alert " role="alert">
+                        <table id="actionhistory-datatable" class="table custom-datatable">
+                            <thead>
+                                <tr class="alert alert-danger">
+                                    
+                                    <th>Action Date</th>
+                                    <th class="text-center">Action Type</th>
+                                    <th>Manual/Automated</th>
+                                    <th>Action Amount</th>
+                                    <th>Bill No.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for action in actions %}
+                                <tr style="background:#d1e4f6;">
+                                    
+                                    <td>{{ action.action_date }}</td>
+                                    {% if action.action_type == 'SMS' %}
+                                      <td class="text-center">
+                                        <a tabindex="0" class="btn btn-warning waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{ action.subtype }}" data-content="{{ action.description }}"><i class="mdi mdi-message"></i> {{ action.action_type }}</a>
+                                      </td>
+                                      {% elif action.action_type == 'Call' %}
+                                      <td class="text-center">
+                                        <a tabindex="0" class="btn btn-success waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-phone"></i>  {{ action.action_type }}</a>
+                                      </td>
+                                      {% elif action.action_type == 'Email' %}
+                                      <td class="text-center">
+                                        <a tabindex="0" class="btn btn-danger waves-effect waves-light"  style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-gmail"></i>  {{ action.action_type }}</a>
+                                      </td>
+                                      {% endif %}
+                                    <td>{{action.type}}</td>
+                                    <td>Rs  {{ action.action_amount }}</td>
+                                    <td>{{ action.bill_no}}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        
+                    </div>
                 </div>
             </div>
 
         </div> <!-- end card-body-->
     </div> <!-- end card-->
 </div> <!-- end col -->
+
+<script>
+    $(document).ready(function() {
+        // Check if the element with id "barChart" exists
+        if ($("#barChart").length) {
+            var currentChartCanvas = $("#barChart").get(0).getContext("2d");
+            var currentChart = new Chart(currentChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ["0-15", "16-30", "31-45", "46-60", "61-75", "76-90", "91-105", "106-120", "Over 121"],
+                    datasets: [{
+                        label: 'Aging Report',
+                        data: [
+                            {{ aging_data.cycle1 }},
+                            {{ aging_data.cycle2 }},
+                            {{ aging_data.cycle3 }},
+                            {{ aging_data.cycle4 }},
+                            {{ aging_data.cycle5 }},
+                            {{ aging_data.cycle6 }},
+                            {{ aging_data.cycle7 }},
+                            {{ aging_data.cycle8 }},
+                            {{ aging_data.cycle9 }},
+                        ],
+                        backgroundColor: ['#2ac14e', '#2ac14e', '#f8ac5a', '#f8ac5a', '#f8ac5a', '#f8ac5a', '#e74c3c', '#e74c3c','#e74c3c']
+                    }]
+                },
+                options: {
+                    legend: {
+                        display: true,
+                        position: 'top', 
+                        labels: {
+                            fontColor: '#686868'
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        yAxes: [{
+                            display: false,
+                            gridLines: {
+                                drawBorder: false,
+                            },
+                            ticks: {
+                                fontColor: "#686868",
+                                callback: function(value, index, values) {
+                                    return 'Rs ' + value;
+                                }
+                            }
+                        }],
+                        xAxes: [{
+                            ticks: {
+                                fontColor: "#686868"
+                            },
+                            gridLines: {
+                                display: false,
+                                drawBorder: false
+                            }
+                        }]
+                    },
+                    elements: {
+                        point: {
+                            radius: 0
+                        }
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                return ' Rs ' + tooltipItem.yLabel;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+
+
+
 {% endblock content %}

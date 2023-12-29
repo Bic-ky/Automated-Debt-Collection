@@ -420,8 +420,53 @@ def client(request):
 
 def client_profile(request, client_id):
     client = get_object_or_404(Client, id=client_id)
-    bills = client.bill_set.all()  # Assuming you have a related name 'bill_set' in your Client model
-    return render(request, 'client_profile.html', {'client': client, 'bills': bills})
+    actions = Action.objects.filter(short_name=client).order_by('-action_date')
+    bills = Bill.objects.filter(short_name=client)
+    cyclebills = client.bill_set.all()
+
+    # Calculate the sum of amounts for each aging bucket
+    aging_data = {
+        'cycle1': cyclebills.aggregate(Sum('cycle1'))['cycle1__sum'] or Decimal(0),
+        'cycle2': cyclebills.aggregate(Sum('cycle2'))['cycle2__sum'] or Decimal(0),
+        'cycle3': cyclebills.aggregate(Sum('cycle3'))['cycle3__sum'] or Decimal(0),
+        'cycle4': cyclebills.aggregate(Sum('cycle4'))['cycle4__sum'] or Decimal(0),
+        'cycle5': cyclebills.aggregate(Sum('cycle5'))['cycle5__sum'] or Decimal(0),
+        'cycle6': cyclebills.aggregate(Sum('cycle6'))['cycle6__sum'] or Decimal(0),
+        'cycle7': cyclebills.aggregate(Sum('cycle7'))['cycle7__sum'] or Decimal(0),
+        'cycle8': cyclebills.aggregate(Sum('cycle8'))['cycle8__sum'] or Decimal(0),
+        'cycle9': cyclebills.aggregate(Sum('cycle9'))['cycle9__sum'] or Decimal(0),
+    }
+
+    # Check if all actions for the client have completed=True
+    all_actions_completed = all(action.completed for action in actions)
+
+    incomplete_actions = []  # Initialize as an empty list
+
+    if all_actions_completed:
+        # If all actions are completed, store the last action
+        last_action = actions.first()
+    else:
+        # If not all actions are completed, filter and store only the incomplete ones
+        incomplete_actions = [action for action in actions if not action.completed]
+        last_action = None  # Initialize to None, in case there are no incomplete actions
+
+    total_amount = client.balance
+    # Calculate percentages based on grand total balance
+    percentages = calculate_percentages(aging_data, total_amount)
+
+    context = {
+        'client': client,
+        'actions': actions,
+        'last_action': last_action,
+        'incomplete_actions': incomplete_actions,
+        'cyclebills': cyclebills,
+        'aging_data': aging_data,
+        'percentages': percentages,
+        'bills': bills,
+        
+    }
+
+    return render(request, 'client_profile.html', context)
 
 def edit_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
@@ -542,7 +587,12 @@ def load_bills(request):
     
     return HttpResponse(options)
 
-def send_sms(phone_number, sms_content):
+def send_sms(phone_number, sms_content, simulate_success=True):
+    if simulate_success:
+        # Simulate a successful response without making the actual API call
+        print(f"Simulated success: SMS content for {phone_number}: {sms_content}")
+        return True, "Simulated success: SMS content printed"
+
     url = "https://api.sparrowsms.com/v2/sms/"
     data = {
         'token': 'v2_M1vtw2aeNOXETkVFSgoOXmOchwN.BqR',
@@ -567,7 +617,7 @@ def check_and_trigger_sms(sender, instance, **kwargs):
     post_save.disconnect(check_and_trigger_sms, sender=Action)
 
     # Check if the action type is 'auto' and action_type is 'SMS'
-    if instance.type == 'auto' and instance.action_type == 'SMS' and instance.completed == False:
+    if instance.type == 'auto' and instance.action_type == 'SMS' and not instance.completed:
         try:
             # Fetch related client and bill
             client = instance.short_name
@@ -581,8 +631,11 @@ def check_and_trigger_sms(sender, instance, **kwargs):
 
             if success:
                 # Update the 'completed' field to True if SMS is sent successfully
-                instance.completed = True
-                instance.save()
+                # Check if 'completed' is already True before updating
+                if not instance.completed:
+                    instance.completed = True
+                    instance.description=sms_content
+                    instance.save()
 
         except ObjectDoesNotExist:
             # Handle the case where the related client is not found
@@ -626,4 +679,79 @@ def generate_sms_text(subtype, client, bill):
     return template.render(context)
 
 
+def auto(request):
+    
+    return render(request, 'auto.html')
 
+def action(request):
+   
+    return render(request, 'action.html')
+
+def aging(request):
+    clients = Client.objects.all()
+    # Calculate the sum of amounts for each aging bucket
+    aging_data = {
+        'cycle1': Bill.objects.aggregate(Sum('cycle1'))['cycle1__sum'] or 0,
+        'cycle2': Bill.objects.aggregate(Sum('cycle2'))['cycle2__sum'] or 0,
+        'cycle3': Bill.objects.aggregate(Sum('cycle3'))['cycle3__sum'] or 0,
+        'cycle4': Bill.objects.aggregate(Sum('cycle4'))['cycle4__sum'] or 0,
+        'cycle5': Bill.objects.aggregate(Sum('cycle5'))['cycle5__sum'] or 0,
+        'cycle6': Bill.objects.aggregate(Sum('cycle6'))['cycle6__sum'] or 0,
+        'cycle7': Bill.objects.aggregate(Sum('cycle7'))['cycle7__sum'] or 0,
+        'cycle8': Bill.objects.aggregate(Sum('cycle8'))['cycle8__sum'] or 0,
+        'cycle9': Bill.objects.aggregate(Sum('cycle9'))['cycle9__sum'] or 0,
+    }
+
+    # Calculate the total sum of all bills
+    total_sum = sum(aging_data.values())
+    # Calculate the grand total sum of all bills' balance
+    grand_total_balance = Bill.objects.aggregate(Sum('balance'))['balance__sum'] or 0
+    
+    # Calculate percentages based on grand total balance
+    percentages = calculate_percentages(aging_data, grand_total_balance)
+
+    context = {
+        'aging_data': aging_data,
+        'total_sum': total_sum,
+        'grand_total_balance': grand_total_balance,
+        'percentages': percentages,
+        'clients':clients,
+    }
+
+    return render(request, 'aging.html', context)
+
+
+def calculate_percentages(aging_data, total_amount):
+    percentage_0_30_days = round((float(aging_data['cycle1']) / float(total_amount)) * 100)
+    percentage_31_60_days = round((float(aging_data['cycle2']) / float(total_amount)) * 100)
+    percentage_61_90_days = round((float(aging_data['cycle3']) / float(total_amount)) * 100)
+    percentage_90_days_plus = round((float(aging_data['cycle4']) + float(aging_data['cycle5']) + float(aging_data['cycle6']) + float(aging_data['cycle7']) + float(aging_data['cycle8']) + float(aging_data['cycle9'])) / float(total_amount) * 100)
+    
+    return {
+        'percentage_0_30_days': percentage_0_30_days,
+        'percentage_31_60_days': percentage_31_60_days,
+        'percentage_61_90_days': percentage_61_90_days,
+        'percentage_90_days_plus': percentage_90_days_plus,
+    }
+    
+    
+def calculate_total_cycles():
+    total_cycles = Decimal(0)
+
+    # Retrieve all clients
+    clients = Client.objects.all()
+
+    # Loop through each client
+    for client in clients:
+        # Retrieve all bills for the current client
+        bills = Bill.objects.filter(short_name=client)
+
+        # Loop through each bill and sum the cycles
+        for bill in bills:
+            total_cycles += sum([
+                bill.cycle1, bill.cycle2, bill.cycle3,
+                bill.cycle4, bill.cycle5, bill.cycle6,
+                bill.cycle7, bill.cycle8, bill.cycle9,
+            ])
+
+    return total_cycles

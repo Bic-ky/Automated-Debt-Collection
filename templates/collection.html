@@ -73,9 +73,7 @@
                                       {% if action.action_type == 'SMS' %}
                                       <td>
                                         <a tabindex="0" class="btn btn-warning waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
-                                        title="{{ action.subtype }}" data-content="{{ action.description }}"><i class="mdi mdi-message"></i> {{ action.action_type }}</a>
-
-                                          
+                                        title="{{ action.subtype }}" data-content="{{ action.description }}"><i class="mdi mdi-message"></i> {{ action.action_type }}</a>                                          
                                       </td>
                                       {% elif action.action_type == 'Call' %}
                                       <td>
@@ -139,8 +137,8 @@
                                       <td>{{ action.action_date }}</td>
                                       {% if action.action_type == 'SMS' %}
                                       <td>
-                                        <a tabindex="0" class="btn btn-danger" role="button" data-toggle="popover" data-trigger="focus" title="Dismissible popover" data-content="And here's some amazing content. It's very engaging. Right?">Dismissible popover</a>
-                                        <button type="button" class="btn btn-warning waves-effect waves-light" style="width: 150px;">
+                                        <button type="button" class="btn btn-warning waves-effect waves-light" style="width: 150px;" data-container="body" data-toggle="popover" data-placement="right" 
+                                        data-content="{{action.description}}">  
                                           <i class="mdi mdi-message"></i> {{ action.action_type }}
                                         </button>
                                         <br>
@@ -149,15 +147,13 @@
                                       </td>
                                       {% elif action.action_type == 'Call' %}
                                       <td>
-                                        <button type="button" class="btn btn-success waves-effect waves-light" style="width: 150px;">
-                                          <i class="mdi mdi-phone"></i> {{ action.action_type }}
-                                        </button>
+                                        <a tabindex="0" class="btn btn-success waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-phone"></i>  {{ action.action_type }}</a>
                                       </td>
                                       {% elif action.action_type == 'Email' %}
                                       <td>
-                                        <button type="button" class="btn btn-danger waves-effect waves-light" style="width: 150px;">
-                                          <i class="mdi mdi-gmail"></i> {{ action.action_type }}
-                                        </button>
+                                        <a tabindex="0" class="btn btn-danger waves-effect waves-light"  style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-gmail"></i>  {{ action.action_type }}</a>
                                       </td>
                                       {% endif %}
                                       <td><strong>{{ action.subtype }}</strong></td>
@@ -190,7 +186,8 @@
                                     <tr style="background:#d1e4f6;">
                                       
                                       <th>Action Date</th>
-                                      <th>Action Type</th>
+                                      <th class="text-center">Action Type</th>
+                                      <th class="text-center">Manual/Automated</th>
                                       <th>Action Amount</th>
                                       <th>Bill No.</th>
                                       <th>Client Name</th>
@@ -203,24 +200,22 @@
                                      
                                       <td>{{ action.action_date }}</td>
                                       {% if action.action_type == 'SMS' %}
-                                      <td>
-                                        <button type="button" class="btn btn-warning waves-effect waves-light" style="width: 150px;">
-                                          <i class="mdi mdi-message"></i> {{ action.action_type }}
-                                        </button>
+                                      <td class="text-center">
+                                        <a tabindex="0" class="btn btn-warning waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{ action.subtype }}" data-content="{{ action.description }}"><i class="mdi mdi-message"></i> {{ action.action_type }}</a>
                                       </td>
                                       {% elif action.action_type == 'Call' %}
-                                      <td>
-                                        <button type="button" class="btn btn-success waves-effect waves-light" style="width: 150px;">
-                                          <i class="mdi mdi-phone"></i> {{ action.action_type }}
-                                        </button>
+                                      <td class="text-center">
+                                        <a tabindex="0" class="btn btn-success waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-phone"></i>  {{ action.action_type }}</a>
                                       </td>
                                       {% elif action.action_type == 'Email' %}
-                                      <td>
-                                        <button type="button" class="btn btn-danger waves-effect waves-light" style="width: 150px;">
-                                          <i class="mdi mdi-gmail"></i> {{ action.action_type }}
-                                        </button>
+                                      <td class="text-center">
+                                        <a tabindex="0" class="btn btn-danger waves-effect waves-light"  style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-gmail"></i>  {{ action.action_type }}</a>
                                       </td>
                                       {% endif %}
+                                      <td class="text-center">{{action.type}}</td>
                                       <td>Rs {{ action.action_amount }}</td>
                                       <td>{{ action.bill_no }}</td>
                                       <td><a href="{% url 'client_profile' client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>

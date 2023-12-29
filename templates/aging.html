@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block content %}
+<div class=row>
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Filters</h4>
+                
+                
+            </div>
+        </div>
+    </div>
+</div>
+<div class=row>
+    <div class="col-xl-9">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Aging Report</h4>
+                <p class="card-subtitle mb-4">Aging Report of Sparrow SMS</p>
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Aging Report</h4>
+                <p class="card-subtitle mb-4">Total Recievable: Rs <strong>{{ grand_total_balance|floatformat:2}}</strong></p>
+                <h4 class="card-title">Monthly Aging:</h4>
+                <p class="card-subtitle mb-4">0-30days: <strong>{{ percentages.percentage_0_30_days }} %</strong></p>
+                <p class="card-subtitle mb-4">30-60days: <strong>{{ percentages.percentage_31_60_days }} %</strong></p>
+                <p class="card-subtitle mb-4">60-90days: <strong>{{ percentages.percentage_61_90_days }} %</strong></p>
+                <p class="card-subtitle mb-4">90days+: <strong>{{ percentages.percentage_90_days_plus }} %</strong></p>
+           
+            </div>
+        </div>
+        
+    </div>
+</div>
+<div class=row>
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Aging Table</h4>
+                <table id="basic-datatable" class="table">
+                    <thead>
+                        <tr style="background:#d1e4f6;">
+                            
+                            
+                            <th>Client Name</th>
+                            <th>Group</th>
+                            <th>Pan no:</th>
+                            <th>Total Overdue</th>
+                            <th>0-15</th>
+                            <th>16-30</th>
+                            <th>31-45</th>
+                            <th>46-60</th>
+                            <th>61-75</th>
+                            <th>76-90</th>
+                            <th>91-105</th>
+                            <th>106-120</th>
+                            <th>120+</th>
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for client in clients %}
+                            <tr style="background:#dff0d8;">
+                                
+                                
+                                <td>
+   
+                                   {{ client.account_name }} 
+                                </td>
+                                <td>{{ client.group }}</td>
+                                <td>{{ client.pan_number }}</td>
+                                <td><b>रु‎ {{ client.balance }}</td>
+                                
+
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Check if the element with id "barChart" exists
+        if ($("#barChart").length) {
+            var currentChartCanvas = $("#barChart").get(0).getContext("2d");
+            var currentChart = new Chart(currentChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ["0-15", "16-30", "31-45", "46-60", "61-75", "76-90", "91-105", "106-120", "Over 121"],
+                    datasets: [{
+                        label: 'Aging Report',
+                        data: [
+                            {{ aging_data.cycle1 }},
+                            {{ aging_data.cycle2 }},
+                            {{ aging_data.cycle3 }},
+                            {{ aging_data.cycle4 }},
+                            {{ aging_data.cycle5 }},
+                            {{ aging_data.cycle6 }},
+                            {{ aging_data.cycle7 }},
+                            {{ aging_data.cycle8 }},
+                            {{ aging_data.cycle9 }},
+                        ],
+                        backgroundColor: [
+                            '#2ac14e', '#2ac14e', 
+                            '#f8ac5a', '#f8ac5a', '#f8ac5a', '#f8ac5a', '#f8ac5a',
+                            '#ff6358', '#ff6358' 
+                        ]
+                    }]
+                },
+                options: {
+                    legend: {
+                        display: true,
+                        position: 'top',  // Position the legend at the top
+                        labels: {
+                            fontColor: '#686868'
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        yAxes: [{
+                            display: false,
+                            gridLines: {
+                                drawBorder: false,
+                            },
+                            ticks: {
+                                fontColor: "#686868",
+                                callback: function(value, index, values) {
+                                    return 'Rs ' + value;
+                                }
+                            }
+                        }],
+                        xAxes: [{
+                            ticks: {
+                                fontColor: "#686868"
+                            },
+                            gridLines: {
+                                display: false,
+                                drawBorder: false
+                            }
+                        }]
+                    },
+                    elements: {
+                        point: {
+                            radius: 0
+                        }
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                return ' Rs ' + tooltipItem.yLabel;
+                            }
+                        }
+                    },
+                }
+            });
+        }
+    });
+</script>
+
+
+{% endblock content %}
