@@ -678,7 +678,6 @@ def generate_sms_text(subtype, client, bill):
     context = Context({'client': client, 'bill': bill, 'agent_name': agent_name, 'contact_number': contact_number})
     return template.render(context)
 
-
 def auto(request):
     
     return render(request, 'auto.html')
@@ -687,9 +686,28 @@ def action(request):
    
     return render(request, 'action.html')
 
+def calculate_total_cycles_for_client(client):
+    return {
+        'cycle1': Bill.objects.filter(short_name=client).aggregate(Sum('cycle1'))['cycle1__sum'] or 0,
+        'cycle2': Bill.objects.filter(short_name=client).aggregate(Sum('cycle2'))['cycle2__sum'] or 0,
+        'cycle3': Bill.objects.filter(short_name=client).aggregate(Sum('cycle3'))['cycle3__sum'] or 0,
+        'cycle4': Bill.objects.filter(short_name=client).aggregate(Sum('cycle4'))['cycle4__sum'] or 0,
+        'cycle5': Bill.objects.filter(short_name=client).aggregate(Sum('cycle5'))['cycle5__sum'] or 0,
+        'cycle6': Bill.objects.filter(short_name=client).aggregate(Sum('cycle6'))['cycle6__sum'] or 0,
+        'cycle7': Bill.objects.filter(short_name=client).aggregate(Sum('cycle7'))['cycle7__sum'] or 0,
+        'cycle8': Bill.objects.filter(short_name=client).aggregate(Sum('cycle8'))['cycle8__sum'] or 0,
+        'cycle9': Bill.objects.filter(short_name=client).aggregate(Sum('cycle9'))['cycle9__sum'] or 0,
+    }
+
 def aging(request):
     clients = Client.objects.all()
     # Calculate the sum of amounts for each aging bucket
+    # Dictionary to store total cycles for each client
+    total_cycles_by_client = {}
+
+    for client in clients:
+        total_cycles_by_client[client.id] = calculate_total_cycles_for_client(client)
+
     aging_data = {
         'cycle1': Bill.objects.aggregate(Sum('cycle1'))['cycle1__sum'] or 0,
         'cycle2': Bill.objects.aggregate(Sum('cycle2'))['cycle2__sum'] or 0,
@@ -716,10 +734,10 @@ def aging(request):
         'grand_total_balance': grand_total_balance,
         'percentages': percentages,
         'clients':clients,
+        'total_cycles_by_client': total_cycles_by_client,
     }
 
     return render(request, 'aging.html', context)
-
 
 def calculate_percentages(aging_data, total_amount):
     percentage_0_30_days = round((float(aging_data['cycle1']) / float(total_amount)) * 100)
@@ -735,23 +753,4 @@ def calculate_percentages(aging_data, total_amount):
     }
     
     
-def calculate_total_cycles():
-    total_cycles = Decimal(0)
-
-    # Retrieve all clients
-    clients = Client.objects.all()
-
-    # Loop through each client
-    for client in clients:
-        # Retrieve all bills for the current client
-        bills = Bill.objects.filter(short_name=client)
-
-        # Loop through each bill and sum the cycles
-        for bill in bills:
-            total_cycles += sum([
-                bill.cycle1, bill.cycle2, bill.cycle3,
-                bill.cycle4, bill.cycle5, bill.cycle6,
-                bill.cycle7, bill.cycle8, bill.cycle9,
-            ])
-
-    return total_cycles
+   

@@ -23,6 +23,7 @@ urlpatterns = [
     path('get_client_names/', views.get_client_names, name='get_client_names'),
     path('ajax/load-bills/', views.load_bills, name='load_bills'),  # AJAX
     
+    
 
 
 ]

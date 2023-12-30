@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load custom_filters %}
+
 {% block content %}
 <div class=row>
     <div class="col-xl-12">
@@ -16,7 +18,7 @@
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">Aging Report</h4>
-                <p class="card-subtitle mb-4">Aging Report of Sparrow SMS</p>
+                
                 <canvas id="barChart"></canvas>
             </div>
         </div>
@@ -24,13 +26,13 @@
     <div class="col-xl-3">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">Aging Report</h4>
-                <p class="card-subtitle mb-4">Total Recievable: Rs <strong>{{ grand_total_balance|floatformat:2}}</strong></p>
+                <h4 class="card-title">Report</h4>
+                <p class="card-subtitle mb-4">Total Recievable:<span class="text-danger"> Rs <strong>{{ grand_total_balance|floatformat:2}}</strong><span></p>
                 <h4 class="card-title">Monthly Aging:</h4>
-                <p class="card-subtitle mb-4">0-30days: <strong>{{ percentages.percentage_0_30_days }} %</strong></p>
-                <p class="card-subtitle mb-4">30-60days: <strong>{{ percentages.percentage_31_60_days }} %</strong></p>
-                <p class="card-subtitle mb-4">60-90days: <strong>{{ percentages.percentage_61_90_days }} %</strong></p>
-                <p class="card-subtitle mb-4">90days+: <strong>{{ percentages.percentage_90_days_plus }} %</strong></p>
+                <p class="card-subtitle mb-4"><span class="text-success">0-30days:</span> <strong>{{ percentages.percentage_0_30_days }} %</strong></p>
+                <p class="card-subtitle mb-4"><span class="text-warning">30-60days:</span> <strong>{{ percentages.percentage_31_60_days }} %</strong></p>
+                <p class="card-subtitle mb-4"><span class="text-warning">60-90days:</span> <strong>{{ percentages.percentage_61_90_days }} %</strong></p>
+                <p class="card-subtitle mb-4"><span class="text-danger">90days+:</span> <strong>{{ percentages.percentage_90_days_plus }} %</strong></p>
            
             </div>
         </div>
@@ -45,11 +47,8 @@
                 <table id="basic-datatable" class="table">
                     <thead>
                         <tr style="background:#d1e4f6;">
-                            
-                            
                             <th>Client Name</th>
-                            <th>Group</th>
-                            <th>Pan no:</th>
+                            
                             <th>Total Overdue</th>
                             <th>0-15</th>
                             <th>16-30</th>
@@ -60,27 +59,28 @@
                             <th>91-105</th>
                             <th>106-120</th>
                             <th>120+</th>
-                            
                         </tr>
                     </thead>
                     <tbody>
                         {% for client in clients %}
-                            <tr style="background:#dff0d8;">
-                                
-                                
-                                <td>
-   
-                                   {{ client.account_name }} 
-                                </td>
-                                <td>{{ client.group }}</td>
-                                <td>{{ client.pan_number }}</td>
-                                <td><b>रु‎ {{ client.balance }}</td>
-                                
-
-                            </tr>
+                        <tr style="background:#dff0d8;font-size: 12px;">
+                            <td><a href="{% url "client_profile" client_id=client.id %}">{{ client.account_name }}</a></td>
+                            
+                            <td><b>Rs {{ client.balance }}</td>    
+                            <td><b>Rs {{ total_cycles_by_client|get_item:client.id|get_item:'cycle1' }}</td>
+                            <td><b>Rs {{ total_cycles_by_client|get_item:client.id|get_item:'cycle2' }}</td>
+                            <td><b>Rs {{ total_cycles_by_client|get_item:client.id|get_item:'cycle3' }}</td>
+                            <td><b>Rs {{ total_cycles_by_client|get_item:client.id|get_item:'cycle4' }}</td>
+                            <td><b>Rs {{ total_cycles_by_client|get_item:client.id|get_item:'cycle5' }}</td>
+                            <td><b>Rs {{ total_cycles_by_client|get_item:client.id|get_item:'cycle6' }}</td>
+                            <td><b>Rs {{ total_cycles_by_client|get_item:client.id|get_item:'cycle7' }}</td>
+                            <td><b>Rs {{ total_cycles_by_client|get_item:client.id|get_item:'cycle8' }}</td>
+                            <td><b>Rs {{ total_cycles_by_client|get_item:client.id|get_item:'cycle9' }}</td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+                
                 
             </div>
         </div>
