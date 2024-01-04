@@ -55,20 +55,23 @@
                               <thead>
                                 <tr style="background:#d1e4f6;">
                                       <th>Completed</th>
+                                      <th>Client Name</th>
                                       <th>Action Date</th>
                                       <th>Action Type</th>
                                       <th>Action Amount</th>
                                       <th>Bill No.</th>
-                                      <th>Client Name</th>
+                                      
                                   </tr>
                               </thead>
                               <tbody>
                                   {% for action in actions %}
                                   {% if not action.completed and action.type == 'manual' %}
                                   <tr style="background-color: #f2dede;">
+                                    
                                       <td class="text-center" style="width: 10px;">
                                           <input type="checkbox" name="completed_actions" value="{{ action.id }}">
                                       </td>
+                                      <td><a href="{% url 'client_profile' client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>
                                       <td>{{ action.action_date }}</td>
                                       {% if action.action_type == 'SMS' %}
                                       <td>
@@ -88,7 +91,7 @@
                                       {% endif %}
                                       <td>Rs {{ action.action_amount }}</td>
                                       <td>{{ action.bill_no}}</td>
-                                      <td><a href="{% url 'client_profile' client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>
+                                      
                                   </tr>
                                   {% endif %}
                                   {% endfor %}
@@ -117,13 +120,16 @@
                           <table id="auto-datatable" class="table custom-datatable"> 
                                   <thead>
                                     <tr style="background:#d1e4f6;">
+                                      {% if auto_count > 0 %}
                                       <th>Completed</th>
+                                      {% endif %}
+                                      <th>Client Name</th>
                                       <th>Action Date</th>
                                       <th>Action Type</th>
                                       <th>SMS Type</th>
                                       <th>Action Amount</th>
                                       <th>Bill No.</th>
-                                      <th>Client Name</th>
+                                      
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -131,9 +137,12 @@
                                     {% if action.type == 'auto'  %}
                                     <tr style="{% if action.completed %}background-color: #dff0d8;
                                     {% elif not action.completed %}background-color: #fcf8e3;{% endif %}">
+                                    {% if auto_count > 0 %}
                                     <td class="text-center" style="width: 10px;">
                                       <input type="checkbox" name="completed_actions" value="{{ action.id }}">
                                     </td>
+                                    {% endif %}
+                                    <td><a href="{% url 'client_profile' client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>
                                       <td>{{ action.action_date }}</td>
                                       {% if action.action_type == 'SMS' %}
                                       <td>
@@ -159,7 +168,7 @@
                                       <td><strong>{{ action.subtype }}</strong></td>
                                       <td>Rs {{ action.action_amount }}</td>
                                       <td>{{ action.bill_no }}</td>
-                                      <td><a href="{% url 'client_profile' client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>
+                                      
                                     </tr>
                                     {% endif %}
                                     {% endfor %}
@@ -184,20 +193,20 @@
                           <table id="history-datatable" class="table custom-datatable">
                                   <thead>
                                     <tr style="background:#d1e4f6;">
-                                      
+                                      <th>Client Name</th>
                                       <th>Action Date</th>
                                       <th class="text-center">Action Type</th>
                                       <th class="text-center">Manual/Automated</th>
                                       <th>Action Amount</th>
                                       <th>Bill No.</th>
-                                      <th>Client Name</th>
+                                      
                                     </tr>
                                   </thead>
                                   <tbody>
                                     {% for action in actions %}
                                     {% if action.completed %}
                                     <tr style="background:#dff0d8">
-                                     
+                                      <td><a href="{% url 'client_profile' client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>
                                       <td>{{ action.action_date }}</td>
                                       {% if action.action_type == 'SMS' %}
                                       <td class="text-center">
@@ -218,7 +227,7 @@
                                       <td class="text-center">{{action.type}}</td>
                                       <td>Rs {{ action.action_amount }}</td>
                                       <td>{{ action.bill_no }}</td>
-                                      <td><a href="{% url 'client_profile' client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>
+                                      
                                     </tr>
                                     {% endif %}
                                     {% endfor %}
