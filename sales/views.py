@@ -678,9 +678,7 @@ def generate_sms_text(subtype, client, bill):
     context = Context({'client': client, 'bill': bill, 'agent_name': agent_name, 'contact_number': contact_number})
     return template.render(context)
 
-def auto(request):
-    
-    return render(request, 'auto.html')
+
 
 def action(request):
    
