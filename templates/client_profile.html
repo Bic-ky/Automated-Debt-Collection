@@ -318,6 +318,56 @@
                                     <p class="card-subtitle mb-4">60-90days: <strong>{{ percentages.percentage_61_90_days }} %</strong></p>
                                     <p class="card-subtitle mb-4">90days+: <strong>{{ percentages.percentage_90_days_plus }} %</strong></p>
                                 </div>
+                                
+                                    <div class="card-body">
+                                        <h4 class="card-title">Send SMS</h4>
+                                        <style>
+                                            #sms-message {
+                                                width: 100%;
+                                                padding: 8px;
+                                                margin-bottom: 10px;
+                                                border: 1px solid #ccc;
+                                                border-radius: 7px;
+                                                resize: vertical;
+                                            }
+                                
+                                            #sms-counter {
+                                                font-size: 14px;
+                                                color: tangerine; /* Change the color to tangerine */
+                                                margin-top: 5px;
+                                            }
+                                        </style>
+                                
+                                        <!-- Display form errors, if any -->
+                                        {{ sms_form.non_field_errors }}
+
+                                        <form method="post" enctype="multipart/form-data">
+                                            {% csrf_token %}
+
+                                            <!-- Display phone_number field with label -->
+                                            <div>
+                                                {{ sms_form.phone_number.label_tag }}
+                                                {{ sms_form.phone_number }}
+                                            </div>
+                                            <!-- Display subtype field with label -->
+                                            <div>
+                                                {{ sms_form.subtype.label_tag }}
+                                                {{ sms_form.subtype }}
+                                            </div>
+                                            <!-- Use the existing textarea for description -->
+                                            <div>
+                                                <label for="sms-message">SMS Message</label>
+                                                <textarea id="sms-message" name="description" rows="4" cols="50"></textarea>
+                                                <div id="sms-counter">Characters: 0 | SMS Count: 0</div>
+                                            </div>
+                                            <!-- Add submit button -->
+                                            <br>
+                                            <div>
+                                                <button class="btn btn-warning rounded-lg "type="submit">Send SMS</button>
+                                            </div>
+                                        </form>
+                                      
+                                    </div>
                             </div>
                         </div>
                         
@@ -452,7 +502,73 @@
         }
     });
 </script>
-
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var messageInput = document.getElementById('sms-message');
+        var counterDisplay = document.getElementById('sms-counter');
+        var charactersContainer = document.getElementById('characters-container');
+    
+        messageInput.addEventListener('input', function () {
+            var message = messageInput.value;
+            var characterCount = message.length;
+    
+            // Calculate SMS count for Unicode characters
+            var unicodeSMS = calculateSMSCount(characterCount, 70, 67);
+    
+            // Calculate SMS count for GSM characters
+            var gsmSMS = calculateSMSCount(characterCount, 160, 153);
+    
+            // Display the SMS count based on the appropriate character set
+            var smsCount = messageIsUnicode(message) ? unicodeSMS : gsmSMS;
+    
+            counterDisplay.textContent = 'Characters: ' + characterCount + ' | SMS Count: ' + smsCount;
+    
+            // Clear previous character boxes
+            charactersContainer.innerHTML = '';
+    
+            // Display characters individually inside grey boxes
+            for (var i = 0; i < characterCount; i++) {
+                var characterBox = document.createElement('div');
+                characterBox.classList.add('character-box');
+                characterBox.textContent = message[i];
+    
+                // Check if the character is a Unicode character
+                if (message[i].charCodeAt(0) > 255) {
+                    characterBox.style.background = '#7F1D1D';
+                    characterBox.style.color = '#FFFF'; // Change color to #7F1D1D
+                }
+    
+                charactersContainer.appendChild(characterBox);
+            }
+        });
+    
+        function calculateSMSCount(characterCount, initialLimit, subsequentMultiplier) {
+            var smsCount = 1;
+            var characterLimit = initialLimit;
+            var counter = 1;
+    
+            for (var i = 1; i < characterCount; i++) {
+                if (i >= characterLimit) {
+                    smsCount++;
+                    counter++;
+                    characterLimit = counter * subsequentMultiplier;
+                }
+            }
+    
+            return smsCount;
+        }
+    
+        function messageIsUnicode(message) {
+            for (var i = 0; i < message.length; i++) {
+                if (message[i].charCodeAt(0) > 255) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    });
+    
+    </script>
 
 
 {% endblock content %}

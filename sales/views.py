@@ -6,7 +6,7 @@ from django.urls import reverse
 from .models import Client, Bill, Action
 from .resources import BillResource
 from django.contrib import messages
-from .forms import ExcelUploadForm, ClientForm, ActionUpdateForm, ActionCreationForm
+from .forms import ExcelUploadForm, ClientForm, ActionUpdateForm, ActionCreationForm,SendSMSForm
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.http import FileResponse, HttpResponse, JsonResponse
 from django.core.files.storage import default_storage
@@ -420,8 +420,6 @@ def client(request):
     clients = Client.objects.all()
     return render(request , 'client.html' ,  {'clients': clients})
 
-
-
 def client_profile(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     actions = Action.objects.filter(short_name=client).order_by('-action_date')
@@ -457,6 +455,40 @@ def client_profile(request, client_id):
     total_amount = client.balance
     # Calculate percentages based on grand total balance
     percentages = calculate_percentages(aging_data, total_amount)
+    
+    
+    if request.method == 'POST':
+        sms_form = SendSMSForm(request.POST)
+        if sms_form.is_valid():
+            # Process the form data
+            description = sms_form.cleaned_data['description']
+            subtype = sms_form.cleaned_data['subtype']
+            phone_number = sms_form.cleaned_data['phone_number']
+
+            # Perform additional actions with the SMS data
+            # For example, log the SMS action in the database
+            Action.objects.create(
+                action_date=timezone.now(),
+                type='manual',
+                action_type='SMS',
+                action_amount=client.balance,  
+                short_name=client,
+                subtype=subtype,
+                description=description,
+                completed=True,
+                
+            )
+
+            # Send the SMS using an external service 
+            send_sms(phone_number, description)
+
+            # Redirect or render a response as needed
+            return redirect(request.path)
+    else:
+        # Assuming you have access to the client's phone number
+        initial_phone_number = client.phone_number if client.phone_number else ''
+        sms_form = SendSMSForm(initial={'phone_number': initial_phone_number})
+
 
     context = {
         'client': client,
@@ -467,6 +499,7 @@ def client_profile(request, client_id):
         'aging_data': aging_data,
         'percentages': percentages,
         'bills': bills,
+        'sms_form':sms_form,
         
     }
 
@@ -484,7 +517,6 @@ def edit_client(request, client_id):
         form = ClientForm(instance=client)
 
     return render(request, 'edit_client.html', {'form': form, 'client': client})
-
 
 def delete_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
@@ -625,10 +657,10 @@ def check_and_trigger_sms(sender, instance, **kwargs):
         try:
             # Fetch related client and bill
             client = instance.short_name
-            bill = instance.bill_no
+            
 
             # Get dynamic SMS content based on subtype
-            sms_content = generate_sms_text(instance.subtype, client, bill)
+            sms_content = generate_sms_text(instance.subtype, client)
 
             # Trigger send_sms function
             success, response_text = send_sms(client.phone_number, sms_content)
@@ -663,7 +695,7 @@ def check_and_trigger_sms(sender, instance, **kwargs):
     # Reconnect the signal after processing
     post_save.connect(check_and_trigger_sms, sender=Action)
 
-def generate_sms_text(subtype, client, bill):
+def generate_sms_text(subtype, client):
     # Default agent name (you can replace it with actual agent name)
     agent_name = client.collector.full_name if client.collector else "Accounts Team"
 
@@ -690,7 +722,7 @@ def generate_sms_text(subtype, client, bill):
 
     # Render the template with dynamic data
     template = Template(template_str)
-    context = Context({'client': client, 'bill': bill, 'agent_name': agent_name, 'contact_number': contact_number})
+    context = Context({'client': client,  'agent_name': agent_name, 'contact_number': contact_number})
     return template.render(context)
 
 def action(request):

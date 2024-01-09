@@ -38,9 +38,6 @@ class ActionUpdateForm(forms.ModelForm):
         # Add form control class to the completed field
         self.fields['completed'].widget.attrs.update({'class': 'form-control'})
 
-    
-
-from django import forms
 
 class ActionCreationForm(forms.ModelForm):
     class Meta:
@@ -69,4 +66,19 @@ class ActionCreationForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs.update({'class': 'form-control'})
 
+class SendSMSForm(forms.ModelForm):
+    # Add non-model fields
+    phone_number = forms.CharField(label='Phone Number', max_length=10)
+    
+    class Meta:
+        model = Action
+        fields = ['description', 'subtype']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
 
+       
+        # Add form control to other fields if needed
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})
