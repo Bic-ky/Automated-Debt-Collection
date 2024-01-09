@@ -2,6 +2,7 @@ from django.forms import ValidationError
 from datetime import datetime, timedelta, date
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+
 from .models import Client, Bill, Action
 from .resources import BillResource
 from django.contrib import messages
@@ -419,6 +420,8 @@ def client(request):
     clients = Client.objects.all()
     return render(request , 'client.html' ,  {'clients': clients})
 
+
+
 def client_profile(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     actions = Action.objects.filter(short_name=client).order_by('-action_date')
@@ -481,6 +484,7 @@ def edit_client(request, client_id):
         form = ClientForm(instance=client)
 
     return render(request, 'edit_client.html', {'form': form, 'client': client})
+
 
 def delete_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)

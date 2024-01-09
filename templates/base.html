@@ -124,10 +124,10 @@
                 <div data-simplebar class="h-100">
 
                     <div class="navbar-brand-box">
-                        <a href="#" class="logo">
-                            <img src="{% static "img/dashlogo.jpg" %}" height="60" width="130"></img>
-                         
+                        <a href="{% if user.is_authenticated %}{% if user.role == user.ADMIN %}{% url 'account:admindashboard' %}{% else %}{% url 'account:userdashboard' %}{% endif %}{% else %}#{% endif %}" class="logo">
+                            <img src="{% static 'img/dashlogo.jpg' %}" height="60" width="130" alt="Dashboard Logo">
                         </a>
+                        
                     </div>
 
                     <!--- Sidemenu -->
@@ -135,46 +135,36 @@
                         <!-- Left Menu Start -->
                         <ul class="metismenu list-unstyled" id="side-menu">
                             <li class="menu-title">Menu</li>
+
                             {% if user.role == user.ADMIN %}
                                 <li>
                                     <a href="{% url "account:admindashboard" %}" class="waves-effect"><i class="mdi mdi-home-analytics"></i><span>Dashboard</span></a>
+                                </li>
+                                <li>
+                                    <a href="{% url "upload_excel" %}" class="waves-effect"><i class="mdi mdi-database-import"></i><span>Upload File</span></a>
+                                </li>
+                                <li>
+                                    <a href="{% url "client" %}" class="waves-effect"><i class="feather-user"></i><span>Client</span></a>
+                                </li>
+                                <li>
+                                    <a href="{% url "action" %}" class="waves-effect"><i class="mdi mdi-podcast"></i><span>Action</span></a>
+                                </li>
+                                <li>
+                                    <a href="{% url "aging" %}" class="waves-effect"><i class="mdi mdi-chart-bar"></i><span>Aging Report</span></a>
                                 </li>
                             {% elif user.role == user.USER %}
                                 <li>
                                     <a href="{% url "account:userdashboard" %}" class="waves-effect"><i class="mdi mdi-home-analytics"></i><span>Dashboard</span></a>
                                 </li>
+                                
+                                <li>
+                                    <a href="{% url "collection" %}" class="waves-effect"><i class="mdi mdi-coin"></i> <span>Collection </span> <span style="margin-bottom:4px;" class="badge badge-danger badge-pill">{{ total_count }}</span></a>
+                                </li>
+                                <li>
+                                    <a href="{% url "action" %}" class="waves-effect"><i class="mdi mdi-podcast"></i><span>Action</span></a>
+                                </li>
                             {% endif %}
 
-                            <li>
-                                <a href="{% url "upload_excel" %}" class="waves-effect"><i
-                                        class="mdi mdi-database-import "></i><span>Upload File</span></a>
-                                
-                            </li>
-                            <li>
-                                <a href="{% url "client" %}" class="waves-effect"><i
-                                        class="feather-user "></i><span>Client</span></a>
-                                
-                            </li>
-                            <li>
-                                <a href="{% url "collection" %}" class="waves-effect"><i
-                                        class="mdi mdi-coin "></i>
-                                        <span>Collection
-                                           
-                                        </span> <span style="margin-bottom:4px;"class="badge badge-danger badge-pill">{{ total_count }}</span></a>
-                                
-                            </li>
-                            
-                            <li>
-                                <a href="{% url "action" %}" class="waves-effect"><i class="mdi mdi-podcast"></i>
-
-                                <span>Action</span></a>
-                                
-                            </li>
-                            <li>
-                                <a href="{% url "aging" %}" class="waves-effect"><i class="mdi mdi-chart-bar"></i>
-                                    <span>Aging Report</span></a>
-                                
-                            </li>
                         </ul>
                     </div>
                     <!-- Sidebar -->

@@ -8,6 +8,7 @@ from django.utils.http import urlsafe_base64_decode
 from .models import User
 from .utils import detectUser, send_verification_email
 from django.contrib.auth.tokens import default_token_generator
+from sales.models import Client
 # Create your views here.
 
 
@@ -66,7 +67,18 @@ def myAccount(request):
 @login_required(login_url='account:login')
 @user_passes_test(check_role_user)
 def userdashboard(request):
-    return render(request ,'user_dash.html')
+    # Retrieve the logged-in user
+    user = request.user
+    clients = Client.objects.all()
+    # Retrieve all clients linked to the user
+    clients_linked_to_user = Client.objects.filter(collector=user)
+
+    context = {
+        'user': user,
+        'clients' : clients ,
+        'clients_linked_to_user': clients_linked_to_user,
+    }
+    return render(request, 'user_dash.html', context)
 
 #admindashboard
 @login_required(login_url='account:login')
