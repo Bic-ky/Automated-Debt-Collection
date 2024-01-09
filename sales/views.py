@@ -290,7 +290,7 @@ def upload_excel(request):
 
 def collection(request):
     clients = Client.objects.all()
-    actions = Action.objects.all() 
+    actions = Action.objects.all().order_by('-created')
     
     
     # Calculate the count of manual actions that are not completed
@@ -726,9 +726,41 @@ def generate_sms_text(subtype, client):
     context = Context({'client': client, 'agent_name': agent_name, 'contact_number': contact_number})
     return template.render(context)
 
+
+from django_filters.views import FilterView
+from .models import Action
+from .filters import ActionFilter
 def action(request):
+    clients = Client.objects.all()
+    actions = Action.objects.all().order_by('-created')
+
+    # Process the date range filter
+    date_from = request.GET.get('action_date_from')
+    date_to = request.GET.get('action_date_to')
+
+    if date_from and date_to:
+        date_from = datetime.strptime(date_from, "%Y-%m-%d")
+        date_to = datetime.strptime(date_to, "%Y-%m-%d")
+        actions = actions.filter(action_date__range=[date_from, date_to])
+    
+    # Calculate the count of manual actions that are not completed
+    manual_not_completed_count = Action.objects.filter(type='manual', completed=False).count()
+    auto_count = Action.objects.filter(type='auto', completed=False).count()
    
-    return render(request, 'action.html')
+    # Set the initial value of the "Action Date" field to today's date
+    today_date = date.today()
+
+    action_filter = ActionFilter(request.GET, queryset=actions)
+    actions = action_filter.qs
+
+    context = {'actions': actions, 
+               'clients': clients,
+               'manual_not_completed_count': manual_not_completed_count, 
+               'auto_count': auto_count,
+               'action_filter': action_filter, 
+                }
+   
+    return render(request, 'action.html' , context)
 
 def calculate_total_cycles_for_client(client):
     return {

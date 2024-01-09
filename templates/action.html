@@ -1,3 +1,385 @@
 {% extends "base.html" %}
+
 {% block content %}
+
+{% load static %}
+<!-- action.html -->
+<!-- action.html -->
+
+  
+  
+<div class="col-xl-12">
+    <div class="card">
+        <div class="card-body">
+            <form method="get" action="" class="form-inline" formnovalidate>
+                <div class="form-group mx-2">
+                    {{ action_filter.form.short_name__collector }}
+                </div>
+                <div class="form-group mx-2">
+                    <label for="{{ action_filter.form.action_date.id_for_label }}"></label>
+                    <input type="date" name="{{ action_filter.form.action_date.name }}_from" class="form-control" placeholder="From" value="{{ action_filter.form.action_date.value|default:'' }}">
+                    <input type="date" name="{{ action_filter.form.action_date.name }}_to" class="form-control" placeholder="To" value="{{ action_filter.form.action_date.value2|default:'' }}">
+                </div>
+                <div class="form-group mx-2">
+                    {{ action_filter.form.short_name }}
+                </div>
+                {% comment %} <div class="form-check mx-2">
+                    {{ action_filter.form.completed }}
+                    <label class="form-check" for="{{ action_filter.form.completed.id_for_label }}">Completed</label>
+                </div> {% endcomment %}
+                <button class="btn btn-primary" type="submit">Filter</button>
+                <a class="text-danger mx-2" href="?{% for key in request.GET %}{% if key != 'page' %}&{{ key }}={% endif %}{% endfor %}">
+                    <b>Clear</b>
+                </a>
+            </form>
+        </div>
+    </div>
+    
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="col-lg-12 text-right">
+              {% include "alerts.html" %}
+              <button type="button" class="btn btn-warning waves-effect waves-light" data-toggle="modal" data-target="#exampleModalLong">
+                Add Action
+              </button>
+               
+                </div>
+                <br>
+            <h4 class="card-title">ACTIONS</h4>
+            <br>
+
+            <ul class="nav nav-tabs nav-justified mb-3">
+                <li class="nav-item">
+                    <a href="#manual" data-toggle="tab" aria-expanded="true" class="nav-link active">
+                        <i class="mdi mdi-home-variant d-lg-none d-block"></i>
+                        <!-- Display the count of manual actions that are not completed -->
+                        <span class="d-none d-lg-block">Manual Actions 
+                          <span class="badge badge-danger badge-pill">{{ manual_not_completed_count }}</span></span>                            
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#automatic" data-toggle="tab" aria-expanded="false" class="nav-link ">
+                        <i class="mdi mdi-account-circle d-lg-none d-block"></i>
+                        <span class="d-none d-lg-block">Automatic Actions <span class="badge badge-danger badge-pill">{{ auto_count }}</span></span></span>
+                        
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#allaction" data-toggle="tab" aria-expanded="false" class="nav-link ">
+                        <i class="mdi mdi-account-circle d-lg-none d-block"></i>
+                        <span class="d-none d-lg-block">Action History </span>
+                        
+                    </a>
+                </li>
+            </ul>
+        
+    <div class="tab-content">
+        <div class="tab-pane show active" id="manual">
+            <div class="row">
+                <div class="col-12">
+                        <div class="card-body">
+                          <table id="manual-datatable" class="table custom-datatable">
+                              <thead>
+                                <tr style="background:#d1e4f6;">
+
+                                      <th>Complete</th>
+                                  
+                                      <th>Client Name</th>
+                                      <th>Action Date</th>
+                                      <th>Action Type</th>
+                                      <th>Action Amount</th>
+                                      <th>Collector</th>
+                                      
+                                      
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  {% for action in actions %}
+                                  {%if action.type == 'manual' %}
+                                  <tr style="background-color: #f2dede;">
+                                    
+                                    {% if action.completed %}
+                                    <td class="text-center" style="width: 10px;">
+                                        <i class="mdi mdi-check mdi-24px " style="color: green;"></i>
+                                    </td>
+                                    {% else %}
+                                    <td class="text-center" style="width: 10px;">
+                                        <i class="mdi mdi-close-circle-outline mdi-24px" style="color: red;"></i>
+                                    </td>
+                                    {% endif %}
+                                      <td><a href="{% url 'client_profile' client_id=action.short_name.id %}">{{ action.short_name }}</a></td>
+                                      <td>{{ action.action_date }}</td>
+                                      {% if action.action_type == 'SMS' %}
+                                      <td>
+                                        <a tabindex="0" class="btn btn-warning waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{ action.subtype }}" data-content="{{ action.description }}"><i class="mdi mdi-message"></i> {{ action.action_type }}</a>                                          
+                                      </td>
+                                      {% elif action.action_type == 'Call' %}
+                                      <td>
+                                        <a tabindex="0" class="btn btn-success waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-phone"></i>  {{ action.action_type }}</a>
+                                      </td>
+                                      {% elif action.action_type == 'Email' %}
+                                      <td>
+                                        <a tabindex="0" class="btn btn-danger waves-effect waves-light"  style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-gmail"></i>  {{ action.action_type }}</a>
+                                      </td>
+                                      {% endif %}
+                                      <td>Rs {{ action.action_amount }}</td>
+                                      <td>{{ action.short_name.collector }}</td>
+                                      
+                                      
+                                  </tr>
+                                  {% endif %}
+                                  {% endfor %}
+                              </tbody>
+                          </table>    
+                </div> <!-- end card body-->
+                 
+                </div><!-- end col-->
+            </div>
+            <!-- end row-->
+        
+        </div>
+        <div class="tab-pane " id="automatic">
+            <div class="row">
+                <div class="col-12">
+                        <div class="card-body">
+                          <table id="auto-datatable" class="table custom-datatable"> 
+                                  <thead>
+                                    <tr style="background:#d1e4f6;">
+                                      
+                                      <th>Completed</th>
+                                      
+                                      <th>Client Name</th>
+                                      <th>Action Date</th>
+                                      <th>Action Type</th>
+                                      <th>SMS Type</th>
+                                      <th>Action Amount</th>
+                                      <th>Collector</th>
+                                      
+                                      
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {% for action in actions %}
+                                    {% if action.type == 'auto' %}
+                                    <tr style="{% if action.completed %}background-color: #dff0d8;
+                                    {% elif not action.completed %}background-color: #fcf8e3;{% endif %}">
+                                    {% if action.completed %}
+                                    <td class="text-center" style="width: 10px;">
+                                        <i class="mdi mdi-check mdi-24px " style="color: green;"></i>
+                                    </td>
+                                    {% else %}
+                                    <td class="text-center" style="width: 10px;">
+                                        <i class="mdi mdi-close-circle-outline mdi-24px" style="color: red;"></i>
+                                    </td>
+                                    {% endif %}
+                                    <td><a href="{% url 'client_profile' client_id=action.short_name.id %}">{{ action.short_name }}</a></td>
+                                      <td>{{ action.action_date }}</td>
+                                      {% if action.action_type == 'SMS' %}
+                                      <td>
+                                        <button type="button" class="btn btn-warning waves-effect waves-light" style="width: 150px;" data-container="body" data-toggle="popover" data-placement="right" 
+                                        {% if action.completed %}data-content="{{action.description}}" {% endif %}>  
+                                          <i class="mdi mdi-message"></i> {{ action.action_type }}
+                                        </button>
+                                        <br>
+                                        {% if not action.completed %}<i class="mdi mdi-chat-alert">{{action.description}}</i>{% endif %}
+                                        
+                                      </td>
+                                      {% elif action.action_type == 'Call' %}
+                                      <td>
+                                        <a tabindex="0" class="btn btn-success waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-phone"></i>  {{ action.action_type }}</a>
+                                      </td>
+                                      {% elif action.action_type == 'Email' %}
+                                      <td>
+                                        <a tabindex="0" class="btn btn-danger waves-effect waves-light"  style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-gmail"></i>  {{ action.action_type }}</a>
+                                      </td>
+                                      {% endif %}
+                                      <td><strong>{{ action.subtype }}</strong></td>
+                                      <td>Rs {{ action.action_amount }}</td>
+                                      <td>{{ action.short_name.collector }}</td>
+                                      
+                                      
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                  </tbody>
+                                </table>
+                        </div> <!-- end card body-->
+                 
+                </div><!-- end col-->
+            </div>
+            <!-- end row-->
+        </div>
+        <div class="tab-pane" id="allaction">
+            <div class="row">
+                <div class="col-12">
+                        <div class="card-body">
+                          <table id="history-datatable" class="table custom-datatable">
+                                  <thead>
+                                    <tr style="background:#d1e4f6;">
+                                       <th>Completed</th>
+                                      <th>Client Name</th>
+                                      <th>Action Date</th>
+                                      <th class="text-center">Action Type</th>
+                                      <th class="text-center">Manual/Automated</th>
+                                      <th>Action Amount</th>
+                                      <th>Collector</th>
+                                      
+                                      
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {% for action in actions %}
+                                    
+                                    <tr style="background:#dff0d8">
+                                        {% if action.completed %}
+                                    <td class="text-center" style="width: 10px;">
+                                        <i class="mdi mdi-check mdi-24px " style="color: green;"></i>
+                                    </td>
+                                    {% else %}
+                                    <td class="text-center" style="width: 10px;">
+                                        <i class="mdi mdi-close-circle-outline mdi-24px" style="color: red;"></i>
+                                    </td>
+                                    {% endif %}
+                                      <td><a href="{% url 'client_profile' client_id=action.short_name.id %}">{{ action.short_name }}</a></td>
+                                      <td>{{ action.action_date }}</td>
+                                      {% if action.action_type == 'SMS' %}
+                                      <td class="text-center">
+                                        <a tabindex="0" class="btn btn-warning waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{ action.subtype }}" data-content="{{ action.description }}"><i class="mdi mdi-message"></i> {{ action.action_type }}</a>
+                                      </td>
+                                      {% elif action.action_type == 'Call' %}
+                                      <td class="text-center">
+                                        <a tabindex="0" class="btn btn-success waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-phone"></i>  {{ action.action_type }}</a>
+                                      </td>
+                                      {% elif action.action_type == 'Email' %}
+                                      <td class="text-center">
+                                        <a tabindex="0" class="btn btn-danger waves-effect waves-light"  style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-gmail"></i>  {{ action.action_type }}</a>
+                                      </td>
+                                      {% endif %}
+                                      <td class="text-center">{{action.type}}</td>
+                                      <td>Rs {{ action.action_amount }}</td>
+                                      <td>{{ action.short_name.collector }}</td>
+                                      
+                                      
+                                    </tr>
+                                    
+                                    {% endfor %}
+                                  </tbody>
+                                </table>
+                                
+                              
+                        </div> <!-- end card body-->
+                 
+                </div><!-- end col-->
+            </div>
+            <!-- end row-->
+        </div>
+    </div>
+    </div> <!-- end card-body-->
+    </div> <!-- end card-->
+</div> <!-- end col -->
+
+<!-- end row-->
+<div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLongTitle"> <i class="mdi mdi-format-list-triangle danger" style="color: red;"></i>
+                Action  </h5>
+              <button type="button" class="close waves-effect waves-light" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+          </div>
+          <div class="modal-body">
+              <!-- Add Action Form -->
+              <form method="post" id="actionForm" data-bills-url="{% url 'load_bills' %}">
+                {% csrf_token %}
+                <!-- Render each form field individually -->
+                <label >Action Date:</label>
+                {{ add_form.action_date }}
+                <br>
+                
+                <div class="form-group mb-0">
+                  <label>Action Type</label>
+                  <br/>
+                  <div class="col mt-1">
+                      <div class="btn-group btn-group-toggle waves-effect waves-light bg-color-primary" data-toggle="buttons">
+                          <label class="btn btn-danger {% if add_form.action_type.value == 'Email' %}active{% endif %}">
+                              <input type="radio"  class="btn btn-secondary waves-effect waves-light" data-toggle="tooltip" data-placement="bottom" title="Selected" name="{{ add_form.action_type.name }}" value="Email" {% if add_form.action_type.value == 'Email' %}checked{% endif %}/>
+                              <i class="mdi mdi-gmail"></i> Email
+                          </label>
+                          
+                          <label class="btn btn-warning {% if add_form.action_type.value == 'SMS' %}active{% endif %}">
+                              <input type="radio" name="{{ add_form.action_type.name }}" value="SMS" {% if add_form.action_type.value == 'SMS' %}checked{% endif %}/>
+                              <i class="mdi mdi-message"></i> SMS
+                          </label>
+                          
+                          <label class="btn btn-success {% if add_form.action_type.value == 'Call' %}active{% endif %}">
+                              <input type="radio" name="{{ add_form.action_type.name }}" value="Call" {% if add_form.action_type.value == 'Call' %}checked{% endif %}/>
+                              <i class="mdi mdi-phone"></i> Call
+                          </label>
+                      </div>
+                  </div>
+              </div>
+                <br>
+                <label for="{{ add_form.short_name.id_for_label }}">Client:</label>
+                {{ add_form.short_name }}
+                <br>
+
+                <div class="form-group">
+                  <label for="{{ add_form.subtype.id_for_label }}">Reminder Type</label>
+                  {{ add_form.subtype }}
+                </div>
+                <div class="form-group">
+                  <label for="{{ add_form.description.id_for_label }}">Remarks</label>
+                  {{ add_form.description }}
+                </div>
+                <br>
+                <label>Follow Up</label>
+                {{ add_form.followup_date }}
+                <br>
+                  <div class="form-group mb-0">
+                    <label>Completed:</label>
+                    <input type="checkbox" data-toggle="switchery"  id="completedCheckbox" name="completed" value="on" {% if add_form.completed.value %}checked{% endif %}/>
+                  </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary waves-effect waves-light" data-dismiss="modal">Close</button>
+                    <button type="submit" name="add_action" class="btn btn-warning waves-effect waves-light">Update Action</button>
+                </div>
+            </form>
+      </div>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+<script>
+  $(document).ready(function () {
+      $('.custom-datatable').DataTable();
+  });
+</script>
+
+
+
+<script src="{% static "assets/plugins/bootstrap-datepicker/bootstrap-datepicker.min.js" %}"></script>
+<!-- Include Switchery JavaScript -->
+<script src="{% static "assets/plugins/switchery/switchery.min.js" %}"></script>
+
+
+<script>
+  var completedCheckbox = document.getElementById('completedCheckbox');
+  var switchery = new Switchery(completedCheckbox, {
+      color: '#09c199',
+      size: 'small'
+  });
+</script>
 {% endblock content %}
+
+
