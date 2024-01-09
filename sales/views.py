@@ -452,6 +452,8 @@ def client_profile(request, client_id):
         incomplete_actions = [action for action in actions if not action.completed]
         last_action = None  # Initialize to None, in case there are no incomplete actions
 
+   
+
     total_amount = client.balance
     # Calculate percentages based on grand total balance
     percentages = calculate_percentages(aging_data, total_amount)
@@ -657,7 +659,6 @@ def check_and_trigger_sms(sender, instance, **kwargs):
         try:
             # Fetch related client and bill
             client = instance.short_name
-            
 
             # Get dynamic SMS content based on subtype
             sms_content = generate_sms_text(instance.subtype, client)
@@ -722,7 +723,7 @@ def generate_sms_text(subtype, client):
 
     # Render the template with dynamic data
     template = Template(template_str)
-    context = Context({'client': client,  'agent_name': agent_name, 'contact_number': contact_number})
+    context = Context({'client': client, 'agent_name': agent_name, 'contact_number': contact_number})
     return template.render(context)
 
 def action(request):
