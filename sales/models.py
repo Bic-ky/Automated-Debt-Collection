@@ -90,24 +90,17 @@ class Action(models.Model):
     action_type = models.CharField(max_length=20, choices=ACTION_CHOICES)
     action_amount = models.FloatField()
     short_name = models.ForeignKey(Client, on_delete=models.CASCADE)
-    bill_no = models.ForeignKey(Bill, on_delete=models.CASCADE)
-    
     # New field for SMS subtype
     subtype = models.CharField(max_length=20, choices=SMS_CHOICES, null=True, blank=True)
-    
+    followup_date = models.DateField(blank=True,default=None,null=True)
     description = models.TextField(blank=True )
     completed = models.BooleanField(default=False)
+    pause = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.action_type} on {self.action_date} "
 
     
-class SMSFormat(models.Model):
-    sms_name = models.CharField(max_length=255)
-    content = models.TextField()
-    action = models.ForeignKey('Action', on_delete=models.CASCADE, related_name='sms_formats')
 
-    def __str__(self):
-        return self.sms_name
     
 

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Client, Bill,Action,SMSFormat
+from .models import Client, Bill,Action
 from import_export.admin import ImportExportActionModelAdmin
 
 @admin.register(Client)
@@ -16,10 +16,7 @@ class BillData(ImportExportActionModelAdmin):
 
 @admin.register(Action)
 class ActionData(ImportExportActionModelAdmin):
-    list_display = ['action_date', 'action_type','type','bill_no','completed','subtype']
-    search_fields = ['type','bill_no']
+    list_display = ['action_date', 'action_type','type','completed','subtype','followup_date']
+    search_fields = ['type']
     list_editable = ['completed','type','action_type']  
     
-@admin.register(SMSFormat)
-class SMSFormatAdmin(admin.ModelAdmin):
-    list_display = ['sms_name', 'content', 'action']

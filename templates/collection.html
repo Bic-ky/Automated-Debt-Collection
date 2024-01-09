@@ -54,12 +54,12 @@
                           <table id="manual-datatable" class="table custom-datatable">
                               <thead>
                                 <tr style="background:#d1e4f6;">
-                                      <th>Completed</th>
+                                      <th>Complete</th>
                                       <th>Client Name</th>
                                       <th>Action Date</th>
                                       <th>Action Type</th>
                                       <th>Action Amount</th>
-                                      <th>Bill No.</th>
+                                      
                                       
                                   </tr>
                               </thead>
@@ -71,7 +71,7 @@
                                       <td class="text-center" style="width: 10px;">
                                           <input type="checkbox" name="completed_actions" value="{{ action.id }}">
                                       </td>
-                                      <td><a href="{% url 'client_profile' client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>
+                                      <td><a href="{% url 'client_profile' client_id=action.short_name.id %}">{{ action.short_name }}</a></td>
                                       <td>{{ action.action_date }}</td>
                                       {% if action.action_type == 'SMS' %}
                                       <td>
@@ -90,7 +90,7 @@
                                       </td>
                                       {% endif %}
                                       <td>Rs {{ action.action_amount }}</td>
-                                      <td>{{ action.bill_no}}</td>
+                                      
                                       
                                   </tr>
                                   {% endif %}
@@ -121,14 +121,14 @@
                                   <thead>
                                     <tr style="background:#d1e4f6;">
                                       {% if auto_count > 0 %}
-                                      <th>Completed</th>
+                                      <th>Complete</th>
                                       {% endif %}
                                       <th>Client Name</th>
                                       <th>Action Date</th>
                                       <th>Action Type</th>
                                       <th>SMS Type</th>
                                       <th>Action Amount</th>
-                                      <th>Bill No.</th>
+                                      
                                       
                                     </tr>
                                   </thead>
@@ -142,16 +142,16 @@
                                       <input type="checkbox" name="completed_actions" value="{{ action.id }}">
                                     </td>
                                     {% endif %}
-                                    <td><a href="{% url 'client_profile' client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>
+                                    <td><a href="{% url 'client_profile' client_id=action.short_name.id %}">{{ action.short_name }}</a></td>
                                       <td>{{ action.action_date }}</td>
                                       {% if action.action_type == 'SMS' %}
                                       <td>
                                         <button type="button" class="btn btn-warning waves-effect waves-light" style="width: 150px;" data-container="body" data-toggle="popover" data-placement="right" 
-                                        data-content="{{action.description}}">  
+                                        {% if action.completed %}data-content="{{action.description}}" {% endif %}>  
                                           <i class="mdi mdi-message"></i> {{ action.action_type }}
                                         </button>
                                         <br>
-                                        {% if not action.completed %}<i class="mdi mdi-chat-alert">Check the client contact number</i>{% endif %}
+                                        {% if not action.completed %}<i class="mdi mdi-chat-alert">{{action.description}}</i>{% endif %}
                                         
                                       </td>
                                       {% elif action.action_type == 'Call' %}
@@ -167,7 +167,7 @@
                                       {% endif %}
                                       <td><strong>{{ action.subtype }}</strong></td>
                                       <td>Rs {{ action.action_amount }}</td>
-                                      <td>{{ action.bill_no }}</td>
+                                      
                                       
                                     </tr>
                                     {% endif %}
@@ -198,7 +198,7 @@
                                       <th class="text-center">Action Type</th>
                                       <th class="text-center">Manual/Automated</th>
                                       <th>Action Amount</th>
-                                      <th>Bill No.</th>
+                                      
                                       
                                     </tr>
                                   </thead>
@@ -206,7 +206,7 @@
                                     {% for action in actions %}
                                     {% if action.completed %}
                                     <tr style="background:#dff0d8">
-                                      <td><a href="{% url 'client_profile' client_id=action.bill_no.short_name.id %}">{{ action.bill_no.short_name }}</a></td>
+                                      <td><a href="{% url 'client_profile' client_id=action.short_name.id %}">{{ action.short_name }}</a></td>
                                       <td>{{ action.action_date }}</td>
                                       {% if action.action_type == 'SMS' %}
                                       <td class="text-center">
@@ -226,7 +226,7 @@
                                       {% endif %}
                                       <td class="text-center">{{action.type}}</td>
                                       <td>Rs {{ action.action_amount }}</td>
-                                      <td>{{ action.bill_no }}</td>
+                                      
                                       
                                     </tr>
                                     {% endif %}
@@ -266,7 +266,6 @@
                 {{ add_form.action_date }}
                 <br>
                 
-
                 <div class="form-group mb-0">
                   <label>Action Type</label>
                   <br/>
@@ -293,19 +292,19 @@
                 <label for="{{ add_form.short_name.id_for_label }}">Client:</label>
                 {{ add_form.short_name }}
                 <br>
-                <label for="{{ add_form.bill_no.id_for_label }}">Bill No:</label>
-                {{ add_form.bill_no }}
-                <br>
+
                 <div class="form-group">
                   <label for="{{ add_form.subtype.id_for_label }}">Reminder Type</label>
                   {{ add_form.subtype }}
                 </div>
                 <div class="form-group">
-                  <label for="{{ add_form.description.id_for_label }}">Description</label>
+                  <label for="{{ add_form.description.id_for_label }}">Remarks</label>
                   {{ add_form.description }}
                 </div>
                 <br>
-                <!-- Your HTML code -->
+                <label>Follow Up</label>
+                {{ add_form.followup_date }}
+                <br>
                   <div class="form-group mb-0">
                     <label>Completed:</label>
                     <input type="checkbox" data-toggle="switchery"  id="completedCheckbox" name="completed" value="on" {% if add_form.completed.value %}checked{% endif %}/>
@@ -327,30 +326,8 @@
 </script>
 
 
-  <script>
-    $(document).ready(function() {
-        $("#id_short_name").change(function () {
-            const url = "{% url 'load_bills' %}";
-            const clientId = $(this).val();
 
-            $.ajax({
-                url: url,
-                data: {
-                    'client_id': clientId
-                },
-                success: function (data) {
-                    $("#id_bill_no").html(data);
-                },
-                error: function (xhr, status, error) {
-                    console.error(xhr.responseText);
-                }
-            });
-        });
-    });
-
-
-</script>
-
+<script src="{% static "assets/plugins/bootstrap-datepicker/bootstrap-datepicker.min.js" %}"></script>
 <!-- Include Switchery JavaScript -->
 <script src="{% static "assets/plugins/switchery/switchery.min.js" %}"></script>
 

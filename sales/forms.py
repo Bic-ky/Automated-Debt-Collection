@@ -53,20 +53,18 @@ class ActionCreationForm(forms.ModelForm):
         choices=Action.ACTION_CHOICES,
         widget=forms.RadioSelect(attrs={'class': 'btn btn-primary waves-effect waves-light'})
     )
-
+    
+    followup_date = forms.DateField(
+        widget=forms.DateInput(
+            attrs={'class': 'form-control', 'type': 'date'}),
+        required=False
+    )
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['bill_no'].queryset = Bill.objects.none()
+        
 
-        if 'client' in self.data:
-            try:
-                client_id = int(self.data.get('client'))
-                self.fields['bill_no'].queryset = Bill.objects.filter(short_name_id=client_id).order_by('bill_no')
-            except (ValueError, TypeError):
-                pass  # Invalid input from the client; ignore and fallback to an empty queryset
-        elif self.instance.pk:
-            self.fields['bill_no'].queryset = self.instance.short_name.bill_set.order_by('bill_no')
-
+       
         # Add form control to other fields if needed
         for field_name, field in self.fields.items():
             field.widget.attrs.update({'class': 'form-control'})

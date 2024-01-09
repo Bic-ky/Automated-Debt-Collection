@@ -22,6 +22,7 @@ from django.dispatch import receiver
 from django.core.serializers.json import DjangoJSONEncoder
 import logging
 from django.template import Context, Template
+import json
 
 # Create your views here.
 
@@ -223,6 +224,7 @@ def upload_excel(request):
                             # Call the functions to update the client's balance and overdue120
                             update_client_balance(existing_bill.short_name)
                             overdue120d(existing_bill.short_name)
+                            delete_actions()
                             continue
                         
                         # Create a new Bill instance
@@ -247,17 +249,11 @@ def upload_excel(request):
                         # Call the function to update the client's balance after each Bill creation
                         update_client_balance(client)
                         overdue120d(client)
-                        
-                        
-                        
-                        
-                        
+                                                   
                     except Client.DoesNotExist:
                         error_messages.append(f'Client "{short_name_value}" not found at row {index + 2}\n')
                     except ValidationError as e:
                         error_messages.append(f'Validation error at row {index + 2}: {e}\n')
-                
-                
                 
                 if success_count > 0:
                     success_messages.append(f"{success_count} records successfully uploaded.")
@@ -270,8 +266,7 @@ def upload_excel(request):
                 for error_message in error_messages:
                     messages.error(request, error_message)
                 
-                # Call the function to create actions for due bills
-                create_actions_for_due_bills()  
+                 
                 return redirect('upload_excel')
 
             except Exception as e:
@@ -309,12 +304,18 @@ def collection(request):
         
         if 'add_action' in request.POST:
             action_type = request.POST.get('action_type')
-            bill_no_id = request.POST.get('bill_no')
+            
             short_name_id = request.POST.get('short_name')
             description=request.POST.get('description')
             subtype=request.POST.get('subtype')
-            
-            
+            followup_date=request.POST.get('followup_date')
+            completed=request.POST.get('completed')
+            if followup_date=='':
+                followup_date=None
+            if completed =='on':
+               completed=True
+            else:
+                completed=False
             # Validate that required fields are present
             if not (action_type ):
                 messages.error(request, 'Action type is  required')
@@ -322,14 +323,14 @@ def collection(request):
 
             # Fetch the related objects
             try:
-                bill_no = Bill.objects.get(pk=bill_no_id)
+                
                 short_name = Client.objects.get(pk=short_name_id)
             except (Bill.DoesNotExist, Client.DoesNotExist):
                 messages.error(request, 'Invalid bill number or short name.')
                 return redirect('collection')
 
             # Set the action_amount to the balance of the corresponding bill
-            action_amount = bill_no.balance if hasattr(bill_no, 'balance') else 0
+            action_amount = short_name.balance if hasattr(short_name, 'balance') else 0
 
             type = 'manual'  # Set the type to 'manual'
 
@@ -339,11 +340,11 @@ def collection(request):
                 type=type,
                 action_type=action_type,
                 action_amount=action_amount,
-                bill_no=bill_no,
                 short_name=short_name,
+                followup_date=followup_date,
                 description=description,
                 subtype=subtype,
-                completed=False,
+                completed=completed,
             )
             action_instance.save()
 
@@ -497,64 +498,62 @@ def add_client(request):
         form = ClientForm()
 
     return render(request, 'add_client.html', {'form': form, 'client': None})
+       
+@receiver(post_save, sender=Bill)
+def create_actions_for_due_bills(sender, instance, created, **kwargs):
+    # Only proceed if a new bill is created
+    if created:
+        # Get today's date
+        today = timezone.now().date()
 
-def create_actions_for_due_bills():
-    # Get today's date
-    today = timezone.now().date()
+        # Calculate target_date
+        target_date = instance.due_date + timedelta(days=instance.short_name.grant_period)
 
-    # Set up logging
-    logger = logging.getLogger(__name__)
+        # Create Action 1
+        Action.objects.create(
+            action_date=target_date,
+            type='auto',
+            action_type='SMS',
+            action_amount=instance.short_name.balance,
+            short_name=instance.short_name,
+            completed=False,
+            subtype='Reminder'
+        )
 
-    try:
-        # Iterate through bills and create actions based on new specifications
-        for bill in Bill.objects.all():
-            # Calculate the target date by adding grant_period to the created date
-            target_date = bill.due_date + timedelta(days=bill.short_name.grant_period)
+        # Create Action 2
+        Action.objects.create(
+            action_date=target_date + timedelta(days=1),
+            type='auto',
+            action_type='SMS',
+            action_amount=instance.short_name.balance,
+            short_name=instance.short_name,
+            completed=False,
+            subtype='Gentle'
+        )
 
-            # Calculate the difference between today and the target date
-            date_difference = (today - target_date).days
+        # Create Action 3
+        Action.objects.create(
+            action_date=target_date + timedelta(days=3),
+            type='auto',
+            action_type='SMS',
+            action_amount=instance.short_name.balance,
+            short_name=instance.short_name,
+            bill_no=instance,
+            completed=False,
+            subtype='Strong'
+        )
 
-            # Determine action_type and subtype based on date_difference and client group
-            action_type = None
-            subtype = None
-            if date_difference == 0:
-                action_type = 'SMS'
-                subtype = 'Reminder'
-            elif 1 <= date_difference <= 3:
-                action_type = 'SMS'
-                subtype = 'Gentle'
-            elif 3 <= date_difference <= 6:
-                action_type = 'SMS'
-                subtype = 'Strong'
-            elif date_difference == 7 and bill.short_name.group == 'Normal':
-                action_type = 'SMS'
-                subtype = 'Final'
-
-            # Log values for debugging
-            logger.info(f"Bill: {bill.bill_no}, Date Difference: {date_difference}, Action Type: {action_type}, Subtype: {subtype}")
-
-            # Check if an action already exists for the given bill
-            if Action.objects.filter(bill_no=bill, subtype=subtype).exists():
-                logger.info(f"Action already exists for Bill: {bill.bill_no}. Skipping creation.")
-            else:
-                # Create the action only if action_type and subtype are determined
-                if action_type and subtype:
-                    bill_instance = Bill.objects.get(bill_no=bill.bill_no)
-                    Action.objects.create(
-                        action_date=today,
-                        type='auto',
-                        action_type=action_type,
-                        action_amount=bill.balance,
-                        short_name=bill.short_name,
-                        bill_no=bill_instance,
-                        completed=False,
-                        subtype=subtype
-                    )
-                    logger.info(f"Action created for Bill: {bill.bill_no}")
-
-    except Exception as e:
-        # Log any exceptions that occur
-        logger.exception(f"Error in create_actions_for_due_bills: {e}")
+        # Create Action 4 (if group is 'Normal')
+        if instance.short_name.group == 'Normal':
+            Action.objects.create(
+                action_date=target_date + timedelta(days=7),
+                type='auto',
+                action_type='SMS',
+                action_amount=instance.short_name.balance,
+                short_name=instance.short_name,
+                completed=False,
+                subtype='Final'
+            )
 
 def get_client_names(request):
     # Query all clients and their associated bill numbers
@@ -587,7 +586,7 @@ def load_bills(request):
     
     return HttpResponse(options)
 
-def send_sms(phone_number, sms_content, simulate_success=True):
+def send_sms(phone_number, sms_content, simulate_success=False):
     if simulate_success:
         # Simulate a successful response without making the actual API call
         print(f"Simulated success: SMS content for {phone_number}: {sms_content}")
@@ -602,7 +601,6 @@ def send_sms(phone_number, sms_content, simulate_success=True):
     }
 
     response = requests.post(url, data=data)
-    print(response.text)
 
     if response.status_code == 200:
         # If SMS is successfully sent, return a tuple indicating success
@@ -615,9 +613,11 @@ def send_sms(phone_number, sms_content, simulate_success=True):
 def check_and_trigger_sms(sender, instance, **kwargs):
     # Disconnect the signal to prevent it from triggering multiple times
     post_save.disconnect(check_and_trigger_sms, sender=Action)
+    
+    today = timezone.now().date()
 
     # Check if the action type is 'auto' and action_type is 'SMS'
-    if instance.type == 'auto' and instance.action_type == 'SMS' and not instance.completed:
+    if instance.type == 'auto' and instance.action_type == 'SMS' and instance.action_date >= today and not instance.completed: 
         try:
             # Fetch related client and bill
             client = instance.short_name
@@ -634,8 +634,19 @@ def check_and_trigger_sms(sender, instance, **kwargs):
                 # Check if 'completed' is already True before updating
                 if not instance.completed:
                     instance.completed = True
-                    instance.description=sms_content
+                    instance.description = sms_content
                     instance.save()
+            else:
+                # If sending SMS fails, update the instance description with the "response" part
+                try:
+                    response_json = json.loads(response_text)
+                    instance.description = response_json.get("response", response_text)
+                except json.JSONDecodeError:
+                    instance.description = response_text
+
+                # Optionally, you may log the error or take other actions if needed
+                print(f"SMS sending failed. Response: {response_text}")
+                instance.save()
 
         except ObjectDoesNotExist:
             # Handle the case where the related client is not found
@@ -659,13 +670,13 @@ def generate_sms_text(subtype, client, bill):
     template_str = ""
 
     if subtype == 'Reminder':
-        template_str = "Dear {{ client.account_name }}, This is {{ agent_name }} from SparrowSMS. We'd like to remind you that payment for Nrs. {{ bill.balance }} will be due by {{ bill.due_date }}. For more information, call {{ contact_number }}."
+        template_str = "Dear {{ client.account_name }}, This is {{ agent_name }} from SparrowSMS. We'd like to remind you that payment for Nrs. {{ client.balance }} is due. For more information, call {{ contact_number }}."
 
     elif subtype == 'Gentle':
-        template_str = "Dear {{ client.account_name }}, This is a gentle reminder that payment for Nrs. {{ bill.balance }} is outstanding on your account. Please send the payment and contact: {{ agent_name }} SPARROW SMS."
+        template_str = "Dear {{ client.account_name }},A gentle reminder of payment Rs{{ client.balance }} is pending. Please send the payment and contact: {{ agent_name }} SPARROW SMS."
 
     elif subtype == 'Strong':
-        template_str = "Dear {{ client.account_name }}, we still have not received Nrs {{ bill.balance }} payment due since {{ bill.due_date }}. We request you to make the payment as soon as possible. {{ contact_number }} SPARROW SMS."
+        template_str = "Dear {{ client.account_name }}, we still have not received Nrs {{ bill.balance }} payment . We request you to make the payment as soon as possible. {{ contact_number }} SPARROW SMS."
 
     elif subtype == 'Final':
         template_str = "Dear {{ client.account_name }}, after several attempts and reminders, we have not received the due Nrs. {{ bill.balance }}. Unfortunately, service will be blocked. Contact us at {{ contact_number }}."
@@ -748,5 +759,13 @@ def calculate_percentages(aging_data, total_amount):
         'percentage_90_days_plus': percentage_90_days_plus,
     }
     
-    
-   
+def delete_actions():
+    # Fetch actions that meet the deletion criteria
+    actions_to_delete = Action.objects.filter(
+        completed=False,
+        type='auto',
+        bill_no__balance__lte=300
+    )
+
+    # Delete the selected actions
+    actions_to_delete.delete()
