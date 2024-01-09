@@ -422,7 +422,7 @@ def client(request):
 
 def client_profile(request, client_id):
     client = get_object_or_404(Client, id=client_id)
-    actions = Action.objects.filter(short_name=client).order_by('-action_date')
+    actions = Action.objects.filter(short_name=client).order_by('-created')
     bills = Bill.objects.filter(short_name=client)
     cyclebills = client.bill_set.all()
 

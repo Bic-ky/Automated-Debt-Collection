@@ -229,7 +229,9 @@
                     <th>Action Date</th>
                     <th class="text-center">Action Type</th>
                     <th>Action Amount</th>
-                    <th>Bill No.</th>
+                    {% if incomplete_actions.0.followup_date %}
+                        <th>Reminder Date:</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -255,7 +257,9 @@
                         </td>
                     {% endif %}
                     <td>Rs  {{ last_action.action_amount }}</td>
-                    <td>{{ last_action.bill_no}}</td>
+                    {% if action.followup_date %}
+                    <td>{{ action.followup_date}}</td>
+                    {% endif %}
                 </tr>
             </tbody>
         </table>

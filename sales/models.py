@@ -80,7 +80,7 @@ class Action(models.Model):
         ('Reminder', 'Reminder'),
         ('Gentle', 'Gentle'),
         ('Strong', 'Strong'),
-        ('Final','Final'),
+        ('Final', 'Final'),
     )
     ACTION_CHOICES = (
         ('SMS', 'SMS'),
@@ -90,15 +90,16 @@ class Action(models.Model):
     action_type = models.CharField(max_length=20, choices=ACTION_CHOICES)
     action_amount = models.FloatField()
     short_name = models.ForeignKey(Client, on_delete=models.CASCADE)
-    # New field for SMS subtype
     subtype = models.CharField(max_length=20, choices=SMS_CHOICES, null=True, blank=True)
-    followup_date = models.DateField(blank=True,default=None,null=True)
-    description = models.TextField(blank=True )
+    followup_date = models.DateField(blank=True, default=None, null=True)
+    description = models.TextField(blank=True)
     completed = models.BooleanField(default=False)
     pause = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True,)
 
     def __str__(self):
         return f"{self.action_type} on {self.action_date} "
+
 
     
 
