@@ -1,158 +1,323 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-
-<div class="col-xl-12">
-    {% include "alerts.html" %}
-<br>
-<ul class="nav nav-tabs nav-justified mb-3" style="background:#d1e4f6;">
-    <li class="nav-item">
-        <a href="#home1" data-toggle="tab" aria-expanded="true" class="nav-link active">
-            <i class="mdi mdi-home-variant d-lg-none d-block"></i>
-            <span class="d-none d-lg-block">All Clients</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="#profile1" data-toggle="tab" aria-expanded="false" class="nav-link ">
-            <i class="mdi mdi-account-circle d-lg-none d-block"></i>
-            <span class="d-none d-lg-block">My Clients</span>
-        </a>
-    </li>
-</ul>
-<div class="tab-content">
-    <div class="tab-pane active" id="home1">
         <div class="row">
-            <div class="col-12">
-                <div class="card-body">
-                    <h4 class="card-title">CLIENTS</h4>
-                    <table id="basic-datatable" class="table">
-                        <thead>
-                            <tr style="background:#d1e4f6;">
-                                <th>#</th>
-                                <th>Client Id</th>
-                                <th>Client Name</th>
-                                <th>Group</th>
-                                <th>Pan no:</th>
-                                <th>Overdue</th>
-                                <th>Overdue + 120d</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for client in clients %}
-                                <tr style="background:#dff0d8;">
-                                    <th scope="row">
-                                        <a href="#" class="deleteButton" data-url="{% url 'delete_client' client_id=client.id %}">
-                                            <i class="feather-trash-2 text-danger"></i>
-                                        </a>
-                                        &emsp;
-                                    </th>
-                                    <td>{{ client.short_name }}</td>
-                                    <td>
-                                        <b>
-                                            <a href="{% url 'client_profile' client_id=client.id %}">{{ client.account_name }}</a>
-                                        </b>
-                                        &emsp;
-                                        <a href="{% url 'edit_client' client_id=client.id %}">
-                                            <i class="dripicons-document-edit text-success"></i>
-                                        </a>
-                                    </td>
-                                    <td>{{ client.group }}</td>
-                                    <td>{{ client.pan_number }}</td>
-                                    <td><b>रु‎ {{ client.balance }}</td>
-                                    <td><b>रु‎ {{ client.overdue120 }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                        
-                    </table>
-                    
-                </div> <!-- end card body-->
-            </div><!-- end col-->
+            <div class="col-md-6 col-xl-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            
+                            <h5 class="card-title mb-0">My Client Dues</h5>
+                        </div>
+                        <div class="row d-flex align-items-center mb-4">
+                            
+                                <h2 class="d-flex align-items-center ml-2">
+                                    Rs {{ grand_total_balance|floatformat:2}}
+                                </h2>
+                            
+                           
+                        </div>   
+                    </div>
+                    <!--end card body-->
+                </div><!-- end card-->
+            </div> <!-- end col-->
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            
+                            <h5 class="card-title mb-0">Actions To Do</h5>
+                        </div>
+                        <div class="row d-flex align-items-center mb-4">
+                            <div class="col-8">
+                                <h2 class="d-flex align-items-center mb-0">
+                                    {{collector_count}}
+                                </h2>
+                            </div>
+                            
+                        </div>
+
+                        <div class="progress shadow-sm" style="height: 5px;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 57%;">
+                            </div>
+                        </div>
+                    </div>
+                    <!--end card body-->
+                </div><!-- end card-->
+            </div> <!-- end col-->
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            
+                            <h5 class="card-title mb-0">Reminders</h5>
+                        </div>
+                        <div class="row d-flex align-items-center mb-4">
+                            <div class="col-8">
+                                <h2 class="d-flex align-items-center mb-0">
+                                    {{upcoming_actions_count}}
+                                </h2>
+                            </div>    
+                        </div>  
+                    </div>
+                    <!--end card body-->
+                </div>
+                <!--end card-->
+            </div> <!-- end col-->
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <span class="badge badge-soft-primary float-right">All Time</span>
+                            <h5 class="card-title mb-0">My collection</h5>
+                        </div>
+                        <div class="row d-flex align-items-center mb-4">
+                            <div class="col-8">
+                                <h2 class="d-flex align-items-center mb-0">
+                                    Rs 100
+                                </h2>
+                            </div>
+                            
+                        </div>
+
+                        <div class="progress shadow-sm" style="height: 5px;">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 57%;"></div>
+                        </div>
+                    </div>
+                    <!--end card body-->
+                </div><!-- end card-->
+            </div> <!-- end col-->
         </div>
         <!-- end row-->
-    </div>
-    <div class="tab-pane " id="profile1"> <!-- Remove the extra '#' character here -->
-        <!-- Content for My Clients tab -->
         <div class="row">
-            <div class="col-12">
-                <div class="card-body">
-                    <h4 class="card-title">MY CLIENTS</h4>
-                    <table id="basic-datatable" class="table">
-                        <!-- Table content for My Clients tab -->
-                        <thead>
-                            <tr style="background:#d1e4f6;">
-                                <th>#</th>
-                                <th>Short Name</th>
-                                <th>Account Name</th>
-                                <th>Collector</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for client in clients_linked_to_user %}
-                                <tr>
-                                    <th scope="row">{{ forloop.counter }}</th>
-                                    <td>{{ client.short_name }}</td>
-                                    <td>
-                                        <b>
-                                            <a href="{% url 'client_profile' client_id=client.id %}">{{ client.account_name }}</a>
-                                        </b>
-                                    </td>
-                                    <td>{{ client.collector.full_name|default:"Not Assigned" }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div> <!-- end card body-->
-            </div><!-- end col-->
-        </div>
-        <!-- end row-->
-    </div>
-    
-</div>
-</div> <!-- end col -->
+            <div class="col-lg-7">
+                <div class="card">
+                    <div class="card-body">
 
+                        <h4 class="card-title">Top Debters</h4>
+
+                        <div class="table-responsive">
+                            <table class="table table-centered table-striped table-nowrap mb-0">
+                                <thead>
+                                    <tr>
+                                        
+                                        <th>Client Name</th>
+                                        {% comment %} <th>Group</th> {% endcomment %}
+                                    
+                                        <th>Overdue</th>
+                                        <th>Overdue + 120d</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for client in top_clients %}
+                                    <tr style="background:#dff0d8;">
+                                        
+                                        
+                                        <td>
+                                            <b>
+                                                <a href="{% url 'client_profile' client_id=client.id %}">{{ client.account_name }}</a>
+                                            </b>
+                                            &emsp;
+                                            
+                                        </td>
+                                        {% comment %} <td>{{ client.group }}</td> {% endcomment %}
+                                        
+                                        <td><b>Rs {{ client.balance }}</td>
+                                        <td><b>Rs {{ client.overdue120 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                    <!--end card body-->
+
+                </div>
+                <!--end card-->
+            </div>
+            <!--end col-->
+            <div class="col-lg-5">
+                <div class="card">
+                    <div class="card-body">
+                
+                        <h4 class="card-title">Today's Follow-up</h4>
+                
+                        {% if clients_with_follow_up_today %}
+                            {% for client in clients_with_follow_up_today|slice:":7" %}
+                                <p>{{ forloop.counter }}. <a href="{% url 'client_profile' client_id=client.id %}">{{ client.account_name }}</a></p>
+                            {% endfor %}
+                
+                            {% if clients_with_follow_up_today|length > 7 %}
+                                <p class="text-right"><a href="#">View more</a></p>
+                            {% endif %}
+                        {% else %}
+                            <p>No follow-up</p>
+                        {% endif %}
+                    </div>
+                    <!--end card body-->
+                </div>
+                
+                
+                
+            </div>
+            <!--end col-->
+
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+
+                <div class="card">
+                    <div class="card-body">
+
+                        <div class="row">
+                            <div class="col-lg-9">
+                                <h4 class="card-title">Client Aging</h4>
+                                
+                                <canvas id="barChart"></canvas>
+                            </div>
+
+                            <div class="col-lg-3">
+
+                                <div class="card-body">
+                                    <h4 class="card-title">Aging Report</h4>
+                                    <p class="card-subtitle mb-4">Recievable:<span class="text-danger"> Rs <strong>{{ grand_total_balance|floatformat:2}}</strong><span></p>
+                                        <h4 class="card-title">Monthly Aging:</h4>
+                                        <p class="card-subtitle mb-4"><span class="text-success">0-30days:</span> <strong>{{ percentages.percentage_0_30_days }} %</strong></p>
+                                        <p class="card-subtitle mb-4"><span class="text-warning">30-60days:</span> <strong>{{ percentages.percentage_31_60_days }} %</strong></p>
+                                        <p class="card-subtitle mb-4"><span class="text-warning">60-90days:</span> <strong>{{ percentages.percentage_61_90_days }} %</strong></p>
+                                        <p class="card-subtitle mb-4"><span class="text-danger">90days+:</span> <strong>{{ percentages.percentage_90_days_plus }} %</strong></p>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <!--end card body-->
+                </div> <!-- end card-->
+            </div> <!-- end col -->
+
+            
+        </div>
+        <!--end row-->
+
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                       
+                        <h4 class="card-title d-inline-block">Overdue Trend</h4>
+
+                        <div id="morris-line-example" class="morris-chart" style="height: 290px;"></div>
+
+                        <div class="row text-center mt-4">
+                            <div class="col-6">
+                                <h4>Rs 7841.12</h4>
+                                <p class="text-muted mb-0">Total Recievable</p>
+                            </div>
+                            
+                        </div>
+
+                    </div>
+                    <!--end card body-->
+
+                </div>
+                <!--end card-->
+            </div>
+            <!--end col-->
+            
+
+        </div>
+        <!--end row-->
+
+        
+    </div> <!-- container-fluid -->
+
+<!-- End Page-content -->
 <script>
-    document.querySelectorAll('.deleteButton').forEach(button => {
-        button.addEventListener('click', function (event) {
-            event.preventDefault();
-
-            // Get the URL from the data-url attribute
-            var deleteUrl = button.getAttribute('data-url');
-
-            Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, delete it!"
-            }).then((result) => {
-                // Check if the user clicked the confirm button
-                if (result.isConfirmed) {
-                    // Display the success message
-                    Swal.fire({
-                        title: "Deleted!",
-                        text: "Your file has been deleted.",
-                        icon: "success"
-                    });
-
-                    // Navigate to the URL stored in the data-url attribute
-                    if (deleteUrl) {
-                        window.location.href = deleteUrl;
-                    } else {
-                        console.error('No data-url attribute found on the clicked button.');
-                    }
+    $(document).ready(function() {
+        // Check if the element with id "barChart" exists
+        if ($("#barChart").length) {
+            var currentChartCanvas = $("#barChart").get(0).getContext("2d");
+            var currentChart = new Chart(currentChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ["0-15", "16-30", "31-45", "46-60", "61-75", "76-90", "91-105", "106-120", "Over 121"],
+                    datasets: [{
+                        label: 'Aging Report',
+                        data: [
+                            {{ aging_data.cycle1 }},
+                            {{ aging_data.cycle2 }},
+                            {{ aging_data.cycle3 }},
+                            {{ aging_data.cycle4 }},
+                            {{ aging_data.cycle5 }},
+                            {{ aging_data.cycle6 }},
+                            {{ aging_data.cycle7 }},
+                            {{ aging_data.cycle8 }},
+                            {{ aging_data.cycle9 }},
+                        ],
+                        backgroundColor: [
+                            '#2ac14e', '#2ac14e', 
+                            '#f8ac5a', '#f8ac5a', '#f8ac5a', '#f8ac5a', '#f8ac5a',
+                            '#ff6358', '#ff6358' 
+                        ]
+                    }]
+                },
+                options: {
+                    legend: {
+                        display: true,
+                        position: 'top',  // Position the legend at the top
+                        labels: {
+                            fontColor: '#686868'
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        yAxes: [{
+                            display: false,
+                            gridLines: {
+                                drawBorder: false,
+                            },
+                            ticks: {
+                                fontColor: "#686868",
+                                callback: function(value, index, values) {
+                                    return 'Rs ' + value;
+                                }
+                            }
+                        }],
+                        xAxes: [{
+                            ticks: {
+                                fontColor: "#686868"
+                            },
+                            gridLines: {
+                                display: false,
+                                drawBorder: false
+                            }
+                        }]
+                    },
+                    elements: {
+                        point: {
+                            radius: 0
+                        }
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                return ' Rs ' + tooltipItem.yLabel;
+                            }
+                        }
+                    },
                 }
             });
-        });
+        }
     });
 </script>
 
 
-
-
-<!-- end row-->
 {% endblock content %}
 

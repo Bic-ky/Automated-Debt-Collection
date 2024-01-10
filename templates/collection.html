@@ -146,8 +146,7 @@
                                       <td>{{ action.action_date }}</td>
                                       {% if action.action_type == 'SMS' %}
                                       <td>
-                                        <button type="button" class="btn btn-warning waves-effect waves-light" style="width: 150px;" data-container="body" data-toggle="popover" data-placement="right" 
-                                        {% if action.completed %}data-content="{{action.description}}" {% endif %}>  
+                                        <button type="button" style="width: 150px;" class="btn btn-warning waves-effect waves-light" data-toggle="tooltip" data-placement="right" {% if action.completed %}title="{{action.description}}"{% endif %}>
                                           <i class="mdi mdi-message"></i> {{ action.action_type }}
                                         </button>
                                         <br>
@@ -156,13 +155,11 @@
                                       </td>
                                       {% elif action.action_type == 'Call' %}
                                       <td>
-                                        <a tabindex="0" class="btn btn-success waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
-                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-phone"></i>  {{ action.action_type }}</a>
+                                        <button type="button" style="width: 150px;" class="btn btn-warning waves-effect waves-light" data-toggle="tooltip" data-placement="right" {% if action.completed %}title="{{action.description}}"{% endif %}>  
                                       </td>
                                       {% elif action.action_type == 'Email' %}
                                       <td>
-                                        <a tabindex="0" class="btn btn-danger waves-effect waves-light"  style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
-                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-gmail"></i>  {{ action.action_type }}</a>
+                                        <button type="button" style="width: 150px;" class="btn btn-warning waves-effect waves-light" data-toggle="tooltip" data-placement="right" {% if action.completed %}title="{{action.description}}"{% endif %}>   
                                       </td>
                                       {% endif %}
                                       <td><strong>{{ action.subtype }}</strong></td>

@@ -2,7 +2,8 @@ from django.forms import ValidationError
 from datetime import datetime, timedelta, date
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-
+from .models import Action
+from .filters import ActionFilter
 from .models import Client, Bill, Action
 from .resources import BillResource
 from django.contrib import messages
@@ -289,8 +290,11 @@ def upload_excel(request):
     return render(request, 'upload.html', context)
 
 def collection(request):
-    clients = Client.objects.all()
-    actions = Action.objects.all().order_by('-created')
+     # Filter clients for the currently logged-in user
+    clients = Client.objects.filter(collector=request.user)
+
+    # Filter actions for the currently logged-in user
+    actions = Action.objects.filter(short_name__collector=request.user).order_by('-created')
     
     
     # Calculate the count of manual actions that are not completed
@@ -726,10 +730,6 @@ def generate_sms_text(subtype, client):
     context = Context({'client': client, 'agent_name': agent_name, 'contact_number': contact_number})
     return template.render(context)
 
-
-from django_filters.views import FilterView
-from .models import Action
-from .filters import ActionFilter
 def action(request):
     clients = Client.objects.all()
     actions = Action.objects.all().order_by('-created')

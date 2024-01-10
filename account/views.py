@@ -2,13 +2,16 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required, user_passes_test
+
+from sales.views import calculate_percentages, calculate_total_cycles_for_client
 from .utils import detectUser
 from django.core.exceptions import PermissionDenied
 from django.utils.http import urlsafe_base64_decode
 from .models import User
 from .utils import detectUser, send_verification_email
 from django.contrib.auth.tokens import default_token_generator
-from sales.models import Client
+from sales.models import Client,Bill,Action
+from django.db.models import Sum, F, Max, Q
 # Create your views here.
 
 
@@ -69,15 +72,45 @@ def myAccount(request):
 def userdashboard(request):
     # Retrieve the logged-in user
     user = request.user
-    clients = Client.objects.all()
-    # Retrieve all clients linked to the user
-    clients_linked_to_user = Client.objects.filter(collector=user)
+    collector_count = Action.objects.filter(completed=False, short_name__collector=request.user).count() 
+    
+    # Filter clients for the currently logged-in user
+    clients = Client.objects.filter(collector=user)
+
+    # Calculate total cycles for each client
+    total_cycles_by_client = {client.id: calculate_total_cycles_for_client(client) for client in clients}
+
+    # Filter bills for the clients associated with the logged-in user
+    bills = Bill.objects.filter(short_name__collector=request.user)
+
+    aging_data = {
+        f'cycle{i}': bills.aggregate(Sum(f'cycle{i}'))[f'cycle{i}__sum'] or 0 for i in range(1, 10)
+    }
+
+    # Calculate the total sum of all bills
+    total_sum = sum(aging_data.values())
+
+    # Calculate the grand total sum of all bills' balance
+    grand_total_balance = bills.aggregate(Sum('balance'))['balance__sum'] or 0
+
+    # Calculate percentages based on grand total balance
+    percentages = calculate_percentages(aging_data, grand_total_balance)
+    
+    # Get the top 5 clients with the highest balance
+    top_clients = clients.order_by('-balance')[:5]
 
     context = {
         'user': user,
-        'clients' : clients ,
-        'clients_linked_to_user': clients_linked_to_user,
+        'clients': clients,
+        'aging_data': aging_data,
+        'total_sum': total_sum,
+        'grand_total_balance': grand_total_balance,
+        'percentages': percentages,
+        'total_cycles_by_client': total_cycles_by_client,
+        'top_clients':top_clients,
+        'collector_count':collector_count,
     }
+
     return render(request, 'user_dash.html', context)
 
 #admindashboard
@@ -145,3 +178,6 @@ def reset_password(request):
     return render(request, 'reset_password.html')
 
 
+
+    
+    
