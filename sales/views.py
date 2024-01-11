@@ -4,14 +4,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from .models import Action
 from .filters import ActionFilter
-from .models import Client, Bill, Action
+from .models import Client, Bill, Action,User,DailyBalance
 from .resources import BillResource
 from django.contrib import messages
 from .forms import ExcelUploadForm, ClientForm, ActionUpdateForm, ActionCreationForm,SendSMSForm
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.core.files.storage import default_storage
-from pandas.errors import EmptyDataError
 from nepali_date_converter import english_to_nepali_converter, nepali_to_english_converter
 from django.db.models import Sum, F, Max, Q
 from decimal import Decimal
@@ -25,6 +24,8 @@ from django.core.serializers.json import DjangoJSONEncoder
 import logging
 from django.template import Context, Template
 import json
+
+
 
 # Create your views here.
 
@@ -226,7 +227,8 @@ def upload_excel(request):
                             # Call the functions to update the client's balance and overdue120
                             update_client_balance(existing_bill.short_name)
                             overdue120d(existing_bill.short_name)
-                            delete_actions()
+                            calculate_total_balance_for_all_collectors()
+                            delete_actions()                            
                             continue
                         
                         # Create a new Bill instance
@@ -251,6 +253,7 @@ def upload_excel(request):
                         # Call the function to update the client's balance after each Bill creation
                         update_client_balance(client)
                         overdue120d(client)
+                        calculate_total_balance_for_all_collectors()
                                                    
                     except Client.DoesNotExist:
                         error_messages.append(f'Client "{short_name_value}" not found at row {index + 2}\n')
@@ -838,3 +841,26 @@ def delete_actions():
 
     # Delete the selected actions
     actions_to_delete.delete()
+
+def calculate_total_balance_for_all_collectors():
+    today = date.today()
+
+    # Get all collectors
+    collectors = User.objects.filter(role=User.USER)
+
+    for collector in collectors:
+        # Calculate the total balance for all clients of the collector in the last 15 days
+        total_balance = Client.objects.filter(collector=collector).aggregate(
+            total_balance=Sum('balance')
+        )['total_balance'] or 0
+
+        # Check if a DailyBalance entry already exists for today and this collector
+        daily_balance_entry = DailyBalance.objects.filter(collector=collector, date=today).first()
+
+        if daily_balance_entry:
+            # Update existing DailyBalance entry with new total_balance
+            daily_balance_entry.total_balance = total_balance
+            daily_balance_entry.save()
+        else:
+            # Create a new DailyBalance entry
+            DailyBalance.objects.create(collector=collector, total_balance=total_balance, date=today)

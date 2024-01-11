@@ -210,13 +210,13 @@
                 <div class="card">
                     <div class="card-body">
                        
-                        <h4 class="card-title d-inline-block">Overdue Trend</h4>
+                        <h4 class="card-title d-inline-block">Overdue Trend (15 days)</h4>
 
-                        <div id="morris-line-example" class="morris-chart" style="height: 290px;"></div>
+                        <div id="line-chart"></div>
 
                         <div class="row text-center mt-4">
-                            <div class="col-6">
-                                <h4>Rs 7841.12</h4>
+                            <div class="col-12">
+                                <h4>Rs {{ grand_total_balance|floatformat:2}}</h4>
                                 <p class="text-muted mb-0">Total Recievable</p>
                             </div>
                             
@@ -238,6 +238,7 @@
     </div> <!-- container-fluid -->
 
 <!-- End Page-content -->
+
 <script>
     $(document).ready(function() {
         // Check if the element with id "barChart" exists
@@ -315,8 +316,24 @@
                 }
             });
         }
+        <!-- Check if the container element exists -->
+        if ($('#line-chart').length) {
+            // Initialize Morris Line Chart
+            Morris.Line({
+                element: 'line-chart',
+                data: {{ chart_data|safe }},
+                xkey: 'y',
+                ykeys: ['balance'],
+                labels: ['Balance'],
+                parseTime: false,  // If 'y' values are not dates, set this to false
+                hideHover: 'auto',
+                resize: true
+            });
+        }
+
     });
 </script>
+
 
 
 {% endblock content %}

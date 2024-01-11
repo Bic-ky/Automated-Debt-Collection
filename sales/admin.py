@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Client, Bill,Action
+from .models import Client, Bill,Action,DailyBalance
 from import_export.admin import ImportExportActionModelAdmin
 
 @admin.register(Client)
@@ -19,4 +19,9 @@ class ActionData(ImportExportActionModelAdmin):
     list_display = ['action_date','short_name', 'action_type','type','completed','subtype','followup_date']
     search_fields = ['type']
     list_editable = ['completed','type','action_type']  
+    
+@admin.register(DailyBalance)
+class BalanceData(ImportExportActionModelAdmin):
+    list_display = ['collector', 'total_balance', 'date',]
+    
     

@@ -101,6 +101,16 @@ class Action(models.Model):
         return f"{self.action_type} on {self.action_date} "
 
 
+class DailyBalance(models.Model):
+    collector = models.ForeignKey(User, on_delete=models.CASCADE)
+    total_balance = models.DecimalField(max_digits=15, decimal_places=2)
+    date = models.DateField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.collector.full_name} - {self.date}"
+
+    class Meta:
+        unique_together = ['collector', 'date']
     
 
     

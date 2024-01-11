@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required, user_passes_test
-
+from datetime import timedelta
 from sales.views import calculate_percentages, calculate_total_cycles_for_client
 from .utils import detectUser
 from django.core.exceptions import PermissionDenied
@@ -10,8 +10,11 @@ from django.utils.http import urlsafe_base64_decode
 from .models import User
 from .utils import detectUser, send_verification_email
 from django.contrib.auth.tokens import default_token_generator
-from sales.models import Client,Bill,Action
+from sales.models import Client,Bill,Action,DailyBalance
 from django.db.models import Sum, F, Max, Q
+import json
+from django.http import JsonResponse
+from django.utils import timezone
 # Create your views here.
 
 
@@ -82,10 +85,25 @@ def userdashboard(request):
 
     # Filter bills for the clients associated with the logged-in user
     bills = Bill.objects.filter(short_name__collector=request.user)
+    
+    # Calculate the date 15 days ago
+    fifteen_days_ago = timezone.now() - timedelta(days=15)
 
-    aging_data = {
-        f'cycle{i}': bills.aggregate(Sum(f'cycle{i}'))[f'cycle{i}__sum'] or 0 for i in range(1, 10)
-    }
+    # Filter daily balances for the last 15 days
+    daily_balances = DailyBalance.objects.filter(collector=user, date__gte=fifteen_days_ago).order_by('date')
+
+    # Prepare data for Morris Line Chart
+    chart_data = []
+    for daily_balance in daily_balances:
+        chart_data.append({
+            'y': daily_balance.date.strftime('%Y-%m-%d'),
+            'balance': float(daily_balance.total_balance),
+        })
+        
+    
+
+    # Calculate aging data
+    aging_data = {f'cycle{i}': bills.aggregate(Sum(f'cycle{i}'))[f'cycle{i}__sum'] or 0 for i in range(1, 10)}
 
     # Calculate the total sum of all bills
     total_sum = sum(aging_data.values())
@@ -107,8 +125,9 @@ def userdashboard(request):
         'grand_total_balance': grand_total_balance,
         'percentages': percentages,
         'total_cycles_by_client': total_cycles_by_client,
-        'top_clients':top_clients,
-        'collector_count':collector_count,
+        'top_clients': top_clients,
+        'collector_count': collector_count,
+        'chart_data': chart_data,
     }
 
     return render(request, 'user_dash.html', context)
