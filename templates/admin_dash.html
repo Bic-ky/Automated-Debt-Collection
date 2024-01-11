@@ -6,11 +6,211 @@
     {% include 'alerts2.html' %}
 </div>
 
-<h1> ADMIN</h1>
+    <div class="container-fluid">
+
+        <div class="row">
+            <div class="col-md-6 col-xl-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <span class="badge badge-soft-primary float-right">Total</span>
+                            <h5 class="card-title mb-0">Total Due</h5>
+                        </div>
+                        <div class="row d-flex align-items-center mb-4">
+                            <div class="col-8">
+                                <h3 class="d-flex align-items-center mb-0">
+                                    Rs. {{total_overdue}}
+                                </h3>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <!--end card body-->
+                </div><!-- end card-->
+            </div> <!-- end col-->
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <span class="badge badge-soft-primary float-right">Clients</span>
+                            <h5 class="card-title mb-0">Total Clients</h5>
+                        </div>
+                        <div class="row d-flex align-items-center mb-4">
+                            <div class="col-8">
+                                <h3 class="d-flex align-items-center mb-0">
+                                    {{clients.count}}
+                                </h3>
+                            </div>
+                           
+                        </div>
+                    </div>
+                    <!--end card body-->
+                </div><!-- end card-->
+            </div> <!-- end col-->
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <span class="badge badge-soft-primary float-right">Collector</span>
+                            <h5 class="card-title mb-0">Active Collectors</h5>
+                        </div>
+                        <div class="row d-flex align-items-center mb-4">
+                            <div class="col-8">
+                                <h3 class="d-flex align-items-center mb-0">
+                                    {{ total_collector }}
+                                </h3>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <!--end card body-->
+                </div>
+                <!--end card-->
+            </div> <!-- end col-->
+
+            <div class="col-md-6 col-xl-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <span class="badge badge-soft-primary float-right">All Time</span>
+                            <h5 class="card-title mb-0">Daily Visits</h5>
+                        </div>
+                        <div class="row d-flex align-items-center mb-4">
+                            <div class="col-8">
+                                <h3 class="d-flex align-items-center mb-0">
+                                    1,15,187
+                                </h3>
+                            </div>
+                           
+                        </div>
+                    </div>
+                    <!--end card body-->
+                </div><!-- end card-->
+            </div> <!-- end col-->
+        </div>
+        <!-- end row-->
+
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        
+                        <h4 class="card-title d-inline-block">Total Overdue</h4>
+
+                        {% comment %} <div id="morris-bar-example" class="morris-chart"></div> {% endcomment %}
+                        <!-- End Page-content -->
+                        <canvas id="collector-chart" width="200" height="100"></canvas>
 
 
+                        <div class="row text-center mt-4">
+                            <div class="col-6">
+                                <h4>Rs. {{total_overdue}}</h4>
+                                <p class="text-muted mb-0">Total Overdue</p>
+                            </div>
+                            <div class="col-6">
+                                <h4>{{total_collector}}</h4>
+                                <p class="text-muted mb-0">Collectors</p>
+                            </div>
+                        </div>
 
+                    </div>
+                    <!--end card body-->
 
+                </div>
+                <!--end card-->
+            </div>
+            <!--end col-->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
 
+                        <h4 class="card-title">Top 5 Clients</h4>
+                        </p>
+
+                        <div class="table-responsive">
+                            <table class="table table-centered table-stripedmb-0">
+                                <thead>
+                                    <tr>
+                                        
+                                        <th>Client Name</th>
+                                        {% comment %} <th>Group</th> {% endcomment %}
+                                    
+                                        <th>Overdue</th>
+                                        <th>Overdue + 120d</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for client in top_clients %}
+                                    <tr style="background:#dff0d8;">
+                                        
+                                        
+                                        <td>
+                                            <b>
+                                                <a href="{% url 'client_profile' client_id=client.id %}">{{ client.account_name }}</a>
+                                            </b>
+                                            &emsp;
+                                            
+                                        </td>
+                                        {% comment %} <td>{{ client.group }}</td> {% endcomment %}
+                                        
+                                        <td><b>Rs {{ client.balance }}</td>
+                                        <td><b>Rs {{ client.overdue120 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                    <!--end card body-->
+
+                </div>
+                <!--end card-->
+            </div>
+            <!--end col-->
+
+        </div>
+        <!--end row-->
+
+        
+    </div> <!-- container-fluid -->
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Check if the element with id "collector-chart" exists
+        if ($("#collector-chart").length) {
+            // Embed dynamic data directly into the template
+            var dynamicData = {
+                labels: [{% for collector, total_due in collector_data.items %}'{{ collector }}',{% endfor %}],
+                datasets: [{
+                    label: 'Balance',
+                    data: [{% for collector, total_due in collector_data.items %}{{ total_due }},{% endfor %}],
+                    backgroundColor: '#3F51B5',
+                }],
+            };
+
+            var ctx = document.getElementById('collector-chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: dynamicData,
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: 'category',
+                            labels: dynamicData.labels,
+                        },
+                        y: {
+                            beginAtZero: true,
+                        },
+                    },
+                },
+            });
+        }
+    });
+</script>
 
 {% endblock content %}

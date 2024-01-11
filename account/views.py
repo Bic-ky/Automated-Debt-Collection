@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages, auth
@@ -132,11 +133,45 @@ def userdashboard(request):
 
     return render(request, 'user_dash.html', context)
 
+
 #admindashboard
 @login_required(login_url='account:login')
 @user_passes_test(check_role_admin)
 def admindashboard(request):
-    return render(request ,'admin_dash.html')
+    # Filter clients for the currently logged-in user
+    clients = Client.objects.all()
+    bills = Bill.objects.all()
+    collector = User.objects.filter(role=2)
+    total_collector = collector.count
+    # Calculate the grand total sum of all bills' balance
+    total_balance = bills.aggregate(Sum('balance'))['balance__sum'] or 0
+
+    # Round the total_overdue to 2 decimal places
+    total_overdue = round(total_balance, 2)
+
+    top_clients = clients.order_by('-balance')[:5]
+
+    collector_data = {}
+
+    for client in clients:
+        collector = client.collector
+        if collector:
+            total_due = Bill.objects.filter(short_name=client).aggregate(Sum('balance'))['balance__sum'] or 0
+            if collector.user_name in collector_data:
+                collector_data[collector.user_name] += total_due
+            else:
+                collector_data[collector.user_name] = total_due
+
+    context = {
+        'clients' : clients ,
+        'total_overdue' : total_overdue ,
+        'collector' : collector ,
+        'total_collector' : total_collector ,
+        'top_clients' : top_clients ,
+        'collector' : collector ,
+        'collector_data': collector_data ,
+    }
+    return render(request ,'admin_dash.html', context)
 
 
 #forgot Password Link
