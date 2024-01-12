@@ -169,105 +169,123 @@
                         <div class="card-body">
                             
                             {% if incomplete_actions %}
-    <br><br> <h5 class="mb-4"><i class="mdi mdi-calendar-check"></i> Actions to do :</h5>
-    <div class="alert " role="alert">
-        <table id="manual-datatable" class="table custom-datatable">
-            <thead>
-                <tr class="alert alert-danger">
-                    <th>Completed</th>
-                    <th>Action Date</th>
-                    <th>Action Type</th>
-                    <th>Action Amount</th>
-                    {% if incomplete_actions.0.followup_date %}
-                        <th>Reminder Date:</th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for action in incomplete_actions %}
-                <tr>
-                    <td class="text-center" style="width: 10px;">
-                        <input type="checkbox" name="completed_actions" value="{{ action.id }}">
-                    </td>
-                    <td>{{ action.action_date }}</td>
-                    {% if action.action_type == 'SMS' %}
-                        <td>
-                            <button type="button" class="btn btn-warning waves-effect waves-light" style="width: 150px;">
-                                <i class="mdi mdi-message"></i> {{ action.action_type }}
-                            </button>
-                        </td>
-                    {% elif action.action_type == 'Call' %}
-                        <td>
-                            <button type="button" class="btn btn-success waves-effect waves-light" style="width: 150px;">
-                                <i class="mdi mdi-phone"></i> {{ action.action_type }}
-                            </button>
-                        </td>
-                    {% elif action.action_type == 'Email' %}
-                        <td>
-                            <button type="button" class="btn btn-danger waves-effect waves-light" style="width: 150px;">
-                                <i class="mdi mdi-gmail"></i> {{ action.action_type }}
-                            </button>
-                        </td>
-                    {% endif %}
-                    <td>Rs  {{ action.action_amount }}</td>
-                    {% if action.followup_date %}
-                    <td>{{ action.followup_date}}</td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <hr style="color: red !important;">
-    </div>
-{% elif last_action %}
-    <br><br> <h5 class="mb-4"><i class="mdi mdi-calendar-check"></i> Recent Action:</h5>
-    <div class="alert " role="alert">
-        <table id="manual-datatable" class="table custom-datatable">
-            <thead>
-                <tr class="alert alert-danger">
-                    <th>Completed</th>
-                    <th>Action Date</th>
-                    <th class="text-center">Action Type</th>
-                    <th>Action Amount</th>
-                    {% if incomplete_actions.0.followup_date %}
-                        <th>Reminder Date </th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="text-center" style="width: 10px;">
-                        <i class="mdi mdi-check" style="color: green;"></i>
-                    </td>
-                    <td>{{ last_action.action_date }}</td>
-                    {% if last_action.action_type == 'SMS' %}
-                        <td class="text-center">
-                            <a tabindex="0" class="btn btn-warning waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
-                            title="{{ last_action.subtype }}" data-content="{{ last_action.description }}"><i class="mdi mdi-message"></i> {{ last_action.action_type }}</a>
-                        </td>
-                    {% elif last_action.action_type == 'Call' %}
-                        <td class="text-center">
-                            <a tabindex="0" class="btn btn-success waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
-                            title="{{last_action.subtype}}" data-content="{{last_action.description}}"><i class="mdi mdi-phone"></i>  {{ last_action.action_type }}</a>
-                        </td>
-                    {% elif last_action.action_type == 'Email' %}
-                        <td class="text-center">
-                            <a tabindex="0" class="btn btn-danger waves-effect waves-light"  style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
-                            title="{{last_action.subtype}}" data-content="{{last_action.description}}"><i class="mdi mdi-gmail"></i>  {{ last_action.action_type }}</a>
-                        </td>
-                    {% endif %}
-                    <td>Rs  {{ last_action.action_amount }}</td>
-                    {% if action.followup_date %}
-                    <td>{{ action.followup_date}}</td>
-                    {% endif %}
-                </tr>
-            </tbody>
-        </table>
-        <hr style="color: red !important;">
-    </div>
-{% endif %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="mb-1"><i class="mdi mdi-calendar-check"></i> Actions to do :</h5>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <form method="post" action="{% url 'extend_action_dates' client_id=client.id %}">
+                                        {% csrf_token %}
+                                        
+                                        <!-- Add an input field for the number of days to extend -->
+                                        <label for="id_extended_date">Number of Days to Extend:</label>
+                                        <input type="number" name="extended_date" id="id_extended_date" required min="1">
+                                        
+                                        <button class="btn btn-primary" type="submit">Extend Actions Date</button>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <div class="alert " role="alert">
+                                <table id="manual-datatable" class="table custom-datatable">
+                                    <thead>
+                                        <tr class="alert alert-danger">
+                                            <th>Completed</th>
+                                            <th>Action Date</th>
+                                            <th>Action Type</th>
+                                            <th>Action Amount</th>
+                                            {% if incomplete_actions.0.followup_date %}
+                                                <th>Reminder Date:</th>
+                                            {% endif %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for action in incomplete_actions %}
+                                        <tr>
+                                            <td class="text-center" style="width: 10px;">
+                                                <input type="checkbox" name="completed_actions" value="{{ action.id }}">
+                                            </td>
+                                            <td>{{ action.action_date }}</td>
+                                            {% if action.action_type == 'SMS' %}
+                                                <td>
+                                                    <button type="button" class="btn btn-warning waves-effect waves-light" style="width: 150px;">
+                                                        <i class="mdi mdi-message"></i> {{ action.action_type }}
+                                                    </button>
+                                                </td>
+                                            {% elif action.action_type == 'Call' %}
+                                                <td>
+                                                    <button type="button" class="btn btn-success waves-effect waves-light" style="width: 150px;">
+                                                        <i class="mdi mdi-phone"></i> {{ action.action_type }}
+                                                    </button>
+                                                </td>
+                                            {% elif action.action_type == 'Email' %}
+                                                <td>
+                                                    <button type="button" class="btn btn-danger waves-effect waves-light" style="width: 150px;">
+                                                        <i class="mdi mdi-gmail"></i> {{ action.action_type }}
+                                                    </button>
+                                                </td>
+                                            {% endif %}
+                                            <td>Rs  {{ action.action_amount }}</td>
+                                            {% if action.followup_date %}
+                                            <td>{{ action.followup_date}}</td>
+                                            {% endif %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                               
 
-        
+                                
+                                <hr style="color: red !important;">
+                            </div>
+                            {% elif last_action %}
+                                <br><br> <h5 class="mb-4"><i class="mdi mdi-calendar-check"></i> Recent Action:</h5>
+                                <div class="alert " role="alert">
+                                    <table id="manual-datatable" class="table custom-datatable">
+                                        <thead>
+                                            <tr class="alert alert-danger">
+                                                <th>Completed</th>
+                                                <th>Action Date</th>
+                                                <th class="text-center">Action Type</th>
+                                                <th>Action Amount</th>
+                                                {% if incomplete_actions.0.followup_date %}
+                                                    <th>Reminder Date </th>
+                                                {% endif %}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="text-center" style="width: 10px;">
+                                                    <i class="mdi mdi-check" style="color: green;"></i>
+                                                </td>
+                                                <td>{{ last_action.action_date }}</td>
+                                                {% if last_action.action_type == 'SMS' %}
+                                                    <td class="text-center">
+                                                        <a tabindex="0" class="btn btn-warning waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                                        title="{{ last_action.subtype }}" data-content="{{ last_action.description }}"><i class="mdi mdi-message"></i> {{ last_action.action_type }}</a>
+                                                    </td>
+                                                {% elif last_action.action_type == 'Call' %}
+                                                    <td class="text-center">
+                                                        <a tabindex="0" class="btn btn-success waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                                        title="{{last_action.subtype}}" data-content="{{last_action.description}}"><i class="mdi mdi-phone"></i>  {{ last_action.action_type }}</a>
+                                                    </td>
+                                                {% elif last_action.action_type == 'Email' %}
+                                                    <td class="text-center">
+                                                        <a tabindex="0" class="btn btn-danger waves-effect waves-light"  style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
+                                                        title="{{last_action.subtype}}" data-content="{{last_action.description}}"><i class="mdi mdi-gmail"></i>  {{ last_action.action_type }}</a>
+                                                    </td>
+                                                {% endif %}
+                                                <td>Rs  {{ last_action.action_amount }}</td>
+                                                {% if action.followup_date %}
+                                                <td>{{ action.followup_date}}</td>
+                                                {% endif %}
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <hr style="color: red !important;">
+                                </div>
+                            {% endif %}
+
                             <table id="basic-datatable" class="table active">
                                 <thead>
                                     <tr style="background:#d1e4f6;">

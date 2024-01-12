@@ -82,3 +82,10 @@ class SendSMSForm(forms.ModelForm):
         # Add form control to other fields if needed
         for field_name, field in self.fields.items():
             field.widget.attrs.update({'class': 'form-control'})
+
+class ExtendActionForm(forms.Form):
+    extended_date = forms.IntegerField(
+        label='Number of Days to Extend',
+        required=True,
+        min_value=1  # Set a minimum value as needed
+    )

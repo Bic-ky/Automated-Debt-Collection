@@ -7,7 +7,7 @@ from .filters import ActionFilter
 from .models import Client, Bill, Action,User,DailyBalance,UserBalance
 from .resources import BillResource
 from django.contrib import messages
-from .forms import ExcelUploadForm, ClientForm, ActionUpdateForm, ActionCreationForm,SendSMSForm
+from .forms import ExcelUploadForm, ClientForm, ActionUpdateForm, ActionCreationForm, ExtendActionForm,SendSMSForm
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.http import HttpResponse, JsonResponse
 from django.core.files.storage import default_storage
@@ -744,6 +744,8 @@ def generate_sms_text(subtype, client):
     context = Context({'client': client, 'agent_name': agent_name, 'contact_number': contact_number})
     return template.render(context)
 
+
+
 def action(request):
     clients = Client.objects.all()
     actions = Action.objects.all().order_by('-created')
@@ -759,13 +761,14 @@ def action(request):
     
     # Calculate the count of manual actions that are not completed
     manual_not_completed_count = Action.objects.filter(type='manual', completed=False).count()
-    auto_count = Action.objects.filter(type='auto', completed=False).count()
+    auto_count = Action.objects.filter(type='auto', completed=False , pause=False).count()
    
     # Set the initial value of the "Action Date" field to today's date
     today_date = date.today()
 
     action_filter = ActionFilter(request.GET, queryset=actions)
     actions = action_filter.qs
+
 
     context = {'actions': actions, 
                'clients': clients,
@@ -775,6 +778,9 @@ def action(request):
                 }
    
     return render(request, 'action.html' , context)
+
+
+
 
 def calculate_total_cycles_for_client(client):
     return {
@@ -876,6 +882,7 @@ def calculate_total_balance_for_all_collectors():
             # Create a new DailyBalance entry
             DailyBalance.objects.create(collector=collector, total_balance=total_balance, date=today)
 
+<<<<<<< Updated upstream
 def update_collector_balances():
     # Get all collectors (users with role USER)
     collectors = User.objects.filter(role=User.USER)
@@ -927,3 +934,66 @@ def send_update_email(subject, message):
     mail.content_subtype = "plain"
     
     mail.send()
+=======
+
+def extend_action_dates(request, client_id):
+    client = Client.objects.get(pk=client_id)
+    actions = Action.objects.filter(short_name=client)
+
+    if request.method == 'POST':
+        form = ExtendActionForm(request.POST)
+        if form.is_valid():
+            # Process the form data and update the action dates for all actions of the client
+
+            # Example:
+            days_to_extend = form.cleaned_data['extended_date']
+
+            for action in actions:
+                # Add days_to_extend to the original action date for each action
+                if days_to_extend:
+                    action.action_date += timedelta(days=days_to_extend)
+                    action.save()
+
+            return redirect('client_profile', client_id=client_id)
+    else:
+        form = ExtendActionForm()
+
+    context = {
+        'client': client,
+        'actions': actions,
+        'form': form,
+    }
+
+    return render(request, 'client_profile.html', context)
+>>>>>>> Stashed changes
+
+
+def extend_action_dates(request, client_id):
+    client = Client.objects.get(pk=client_id)
+    actions = Action.objects.filter(short_name=client)
+
+    if request.method == 'POST':
+        form = ExtendActionForm(request.POST)
+        if form.is_valid():
+            # Process the form data and update the action dates for all actions of the client
+
+            # Example:
+            days_to_extend = form.cleaned_data['extended_date']
+
+            for action in actions:
+                # Add days_to_extend to the original action date for each action
+                if days_to_extend:
+                    action.action_date += timedelta(days=days_to_extend)
+                    action.save()
+
+            return redirect('client_profile', client_id=client_id)
+    else:
+        form = ExtendActionForm()
+
+    context = {
+        'client': client,
+        'actions': actions,
+        'form': form,
+    }
+
+    return render(request, 'client_profile.html', context)

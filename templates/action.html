@@ -142,79 +142,69 @@
             <!-- end row-->
         
         </div>
-        <div class="tab-pane " id="automatic">
-            <div class="row">
-                <div class="col-12">
-                        <div class="card-body">
-                          <table id="auto-datatable" class="table custom-datatable"> 
-                                  <thead>
-                                    <tr style="background:#d1e4f6;">
-                                      
-                                      <th>Completed</th>
-                                      
-                                      <th>Client Name</th>
-                                      <th>Action Date</th>
-                                      <th>Action Type</th>
-                                      <th>SMS Type</th>
-                                      <th>Action Amount</th>
-                                      <th>Collector</th>
-                                      
-                                      
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {% for action in actions %}
-                                    {% if action.type == 'auto' %}
-                                    <tr style="{% if action.completed %}background-color: #dff0d8;
-                                    {% elif not action.completed %}background-color: #fcf8e3;{% endif %}">
-                                    {% if action.completed %}
-                                    <td class="text-center" style="width: 10px;">
-                                        <i class="mdi mdi-check mdi-24px " style="color: green;"></i>
-                                    </td>
-                                    {% else %}
-                                    <td class="text-center" style="width: 10px;">
-                                        <i class="mdi mdi-close-circle-outline mdi-24px" style="color: red;"></i>
-                                    </td>
-                                    {% endif %}
-                                    <td><a href="{% url 'client_profile' client_id=action.short_name.id %}">{{ action.short_name }}</a></td>
-                                      <td>{{ action.action_date }}</td>
-                                      {% if action.action_type == 'SMS' %}
-                                      <td>
-                                        <button type="button" class="btn btn-warning waves-effect waves-light" style="width: 150px;" data-container="body" data-toggle="popover" data-placement="right" 
-                                        {% if action.completed %}data-content="{{action.description}}" {% endif %}>  
-                                          <i class="mdi mdi-message"></i> {{ action.action_type }}
-                                        </button>
-                                        <br>
-                                        {% if not action.completed %}<i class="mdi mdi-chat-alert">{{action.description}}</i>{% endif %}
-                                        
-                                      </td>
-                                      {% elif action.action_type == 'Call' %}
-                                      <td>
-                                        <a tabindex="0" class="btn btn-success waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
-                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-phone"></i>  {{ action.action_type }}</a>
-                                      </td>
-                                      {% elif action.action_type == 'Email' %}
-                                      <td>
-                                        <a tabindex="0" class="btn btn-danger waves-effect waves-light"  style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" 
-                                        title="{{action.subtype}}" data-content="{{action.description}}"><i class="mdi mdi-gmail"></i>  {{ action.action_type }}</a>
-                                      </td>
-                                      {% endif %}
-                                      <td><strong>{{ action.subtype }}</strong></td>
-                                      <td>Rs {{ action.action_amount }}</td>
-                                      <td>{{ action.short_name.collector }}</td>
-                                      
-                                      
-                                    </tr>
-                                    {% endif %}
-                                    {% endfor %}
-                                  </tbody>
-                                </table>
-                        </div> <!-- end card body-->
-                 
-                </div><!-- end col-->
-            </div>
-            <!-- end row-->
-        </div>
+        <div class="tab-pane" id="automatic">
+          <div class="row">
+              <div class="col-12">
+                  <div class="card-body">
+                        {% csrf_token %}
+                      <table id="auto-datatable" class="table custom-datatable">
+                          <thead>
+                              <tr style="background:#d1e4f6;">
+                                  <th>Completed</th>
+                                  <th>Client Name</th>
+                                  <th>Action Date</th>
+                                  <th>Action Type</th>
+                                  <th>SMS Type</th>
+                                  <th>Action Amount</th>
+                                  <th>Collector</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {% for action in actions %}
+                                  {% if action.type == 'auto' %}
+                                      <tr style="{% if action.completed %}background-color: #dff0d8;{% elif not action.completed %}background-color: #fcf8e3;{% endif %}">
+                                          <td class="text-center" style="width: 10px;">
+                                              {% if action.completed %}
+                                                  <i class="mdi mdi-check mdi-24px" style="color: green;"></i>
+                                              {% else %}
+                                                  <i class="mdi mdi-close-circle-outline mdi-24px" style="color: red;"></i>
+                                              {% endif %}
+                                          </td>
+                                          <td><a href="{% url 'client_profile' client_id=action.short_name.id %}">{{ action.short_name }}</a></td>
+                                          <td>{{ action.action_date }}</td>
+                                          <td>
+                                              {% if action.action_type == 'SMS' %}
+                                                  <button type="button" class="btn btn-warning waves-effect waves-light" style="width: 150px;" data-container="body" data-toggle="popover" data-placement="right" {% if action.completed %}data-content="{{action.description}}" {% endif %}>
+                                                      <i class="mdi mdi-message"></i> {{ action.action_type }}
+                                                  </button>
+                                                  <br>
+                                                  {% if not action.completed %}<i class="mdi mdi-chat-alert">{{action.description}}</i>{% endif %}
+                                              {% elif action.action_type == 'Call' %}
+                                                  <a tabindex="0" class="btn btn-success waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" title="{{action.subtype}}" data-content="{{action.description}}">
+                                                      <i class="mdi mdi-phone"></i> {{ action.action_type }}
+                                                  </a>
+                                              {% elif action.action_type == 'Email' %}
+                                                  <a tabindex="0" class="btn btn-danger waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" title="{{action.subtype}}" data-content="{{action.description}}">
+                                                      <i class="mdi mdi-gmail"></i> {{ action.action_type }}
+                                                  </a>
+                                              {% endif %}
+                                          </td>
+                                          <td><strong>{{ action.subtype }}</strong></td>
+                                          <td>Rs {{ action.action_amount }}</td>
+                                          <td>{{ action.short_name.collector }}</td>
+                                         
+                                      </tr>
+                                  {% endif %}
+                              {% endfor %}
+                          </tbody>
+                      </table>
+                      
+                  </div> <!-- end card body-->
+              </div><!-- end col-->
+          </div>
+          <!-- end row-->
+      </div>
+      
         <div class="tab-pane" id="allaction">
             <div class="row">
                 <div class="col-12">
@@ -287,77 +277,9 @@
     </div> <!-- end card-->
 </div> <!-- end col -->
 
-<!-- end row-->
-{% comment %} <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-      <div class="modal-content">
-          <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLongTitle"> <i class="mdi mdi-format-list-triangle danger" style="color: red;"></i>
-                Action  </h5>
-              <button type="button" class="close waves-effect waves-light" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-              </button>
-          </div>
-          <div class="modal-body">
-              <!-- Add Action Form -->
-              <form method="post" id="actionForm" data-bills-url="{% url 'load_bills' %}">
-                {% csrf_token %}
-                <!-- Render each form field individually -->
-                <label >Action Date:</label>
-                {{ add_form.action_date }}
-                <br>
-                
-                <div class="form-group mb-0">
-                  <label>Action Type</label>
-                  <br/>
-                  <div class="col mt-1">
-                      <div class="btn-group btn-group-toggle waves-effect waves-light bg-color-primary" data-toggle="buttons">
-                          <label class="btn btn-danger {% if add_form.action_type.value == 'Email' %}active{% endif %}">
-                              <input type="radio"  class="btn btn-secondary waves-effect waves-light" data-toggle="tooltip" data-placement="bottom" title="Selected" name="{{ add_form.action_type.name }}" value="Email" {% if add_form.action_type.value == 'Email' %}checked{% endif %}/>
-                              <i class="mdi mdi-gmail"></i> Email
-                          </label>
-                          
-                          <label class="btn btn-warning {% if add_form.action_type.value == 'SMS' %}active{% endif %}">
-                              <input type="radio" name="{{ add_form.action_type.name }}" value="SMS" {% if add_form.action_type.value == 'SMS' %}checked{% endif %}/>
-                              <i class="mdi mdi-message"></i> SMS
-                          </label>
-                          
-                          <label class="btn btn-success {% if add_form.action_type.value == 'Call' %}active{% endif %}">
-                              <input type="radio" name="{{ add_form.action_type.name }}" value="Call" {% if add_form.action_type.value == 'Call' %}checked{% endif %}/>
-                              <i class="mdi mdi-phone"></i> Call
-                          </label>
-                      </div>
-                  </div>
-              </div>
-                <br>
-                <label for="{{ add_form.short_name.id_for_label }}">Client:</label>
-                {{ add_form.short_name }}
-                <br>
 
-                <div class="form-group">
-                  <label for="{{ add_form.subtype.id_for_label }}">Reminder Type</label>
-                  {{ add_form.subtype }}
-                </div>
-                <div class="form-group">
-                  <label for="{{ add_form.description.id_for_label }}">Remarks</label>
-                  {{ add_form.description }}
-                </div>
-                <br>
-                <label>Follow Up</label>
-                {{ add_form.followup_date }}
-                <br>
-                  <div class="form-group mb-0">
-                    <label>Completed:</label>
-                    <input type="checkbox" data-toggle="switchery"  id="completedCheckbox" name="completed" value="on" {% if add_form.completed.value %}checked{% endif %}/>
-                  </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary waves-effect waves-light" data-dismiss="modal">Close</button>
-                    <button type="submit" name="add_action" class="btn btn-warning waves-effect waves-light">Update Action</button>
-                </div>
-            </form>
-      </div>
-  </div>
-</div> {% endcomment %}
+
+
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 
 <script>

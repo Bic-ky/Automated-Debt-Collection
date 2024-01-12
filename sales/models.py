@@ -96,6 +96,7 @@ class Action(models.Model):
     description = models.TextField(blank=True)
     completed = models.BooleanField(default=False)
     pause = models.BooleanField(default=False)
+    extended_date = models.IntegerField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True,)
 
     def __str__(self):
