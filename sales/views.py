@@ -32,7 +32,6 @@ from django.urls import reverse
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
-
 # Create your views here.
 
 def profile(request):
@@ -744,8 +743,6 @@ def generate_sms_text(subtype, client):
     context = Context({'client': client, 'agent_name': agent_name, 'contact_number': contact_number})
     return template.render(context)
 
-
-
 def action(request):
     clients = Client.objects.all()
     actions = Action.objects.all().order_by('-created')
@@ -778,9 +775,6 @@ def action(request):
                 }
    
     return render(request, 'action.html' , context)
-
-
-
 
 def calculate_total_cycles_for_client(client):
     return {
@@ -882,6 +876,58 @@ def calculate_total_balance_for_all_collectors():
             # Create a new DailyBalance entry
             DailyBalance.objects.create(collector=collector, total_balance=total_balance, date=today)
 
+def update_collector_balances():
+    # Get all collectors (users with role USER)
+    collectors = User.objects.filter(role=User.USER)
+
+    # Calculate yesterday's date
+    yesterday = datetime.now().date() - timedelta(days=1)
+
+    for collector in collectors:
+        # Get or create UserBalance for the collector
+        user_balance, created = UserBalance.objects.get_or_create(user=collector)
+
+        # Get yesterday's balance
+        yesterday_balance = DailyBalance.objects.filter(
+            collector=collector,
+            date=yesterday
+        ).values('total_balance').first()
+
+        # Get today's balance
+        today_balance = DailyBalance.objects.filter(
+            collector=collector,
+            date=datetime.now().date()
+        ).values('total_balance').first()
+
+        if yesterday_balance and today_balance:
+            # Calculate the difference as yesterday's balance minus today's balance
+            balance_difference = yesterday_balance['total_balance'] - today_balance['total_balance']
+
+            if balance_difference > 0:
+                # Update collector_balance by subtracting the positive difference
+                user_balance.collector_balance = F('collector_balance') + balance_difference
+                user_balance.save()
+
+                # Update the DailyBalance for today with the new collector_balance
+                DailyBalance.objects.filter(
+                    collector=collector,
+                    date=datetime.now().date()
+                ).update(total_balance=user_balance.collector_balance)
+
+def send_update_email(subject, message):
+    
+    from_email = settings.DEFAULT_FROM_EMAIL
+    
+    to_email = "adityachaudhary700@example.com"  
+    
+    # Create an EmailMessage with the subject, message, and sender/recipient information
+    mail = EmailMessage(subject, message, from_email, to=[to_email])
+    
+    # Specify that the email content type is plain text
+    mail.content_subtype = "plain"
+    
+    mail.send()
+
 def extend_action_dates(request, client_id):
     client = Client.objects.get(pk=client_id)
     actions = Action.objects.filter(short_name=client)
@@ -912,32 +958,13 @@ def extend_action_dates(request, client_id):
 
     return render(request, 'client_profile.html', context)
 
-def extend_action_dates(request, client_id):
-    client = Client.objects.get(pk=client_id)
-    actions = Action.objects.filter(short_name=client)
-
-    if request.method == 'POST':
-        form = ExtendActionForm(request.POST)
-        if form.is_valid():
-            # Process the form data and update the action dates for all actions of the client
-
-            # Example:
-            days_to_extend = form.cleaned_data['extended_date']
-
-            for action in actions:
-                # Add days_to_extend to the original action date for each action
-                if days_to_extend:
-                    action.action_date += timedelta(days=days_to_extend)
-                    action.save()
-
-            return redirect('client_profile', client_id=client_id)
-    else:
-        form = ExtendActionForm()
-
+def myclient(request):
+    user = request.user
+    # Filter clients for the currently logged-in user
+    clients = Client.objects.filter(collector=user)
     context = {
-        'client': client,
-        'actions': actions,
-        'form': form,
+        'user': user,
+        'clients': clients,
+        
     }
-
-    return render(request, 'client_profile.html', context)
+    return render(request, 'myclient.html',context)

@@ -152,11 +152,34 @@
                             {% endfor %}
                 
                             {% if clients_with_follow_up_today|length > 7 %}
-                                <p class="text-right"><a href="#">View more</a></p>
-                            {% endif %}
+                            
+                            <p class="text-right" data-toggle="modal" data-target="#exampleModalLong"><a href="#">View more</a></p>
+                            {% endif %}   
                         {% else %}
                             <p>No follow-up</p>
+                            
                         {% endif %}
+                        
+                        <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="exampleModalLongTitle">All Follow-ups</h5>
+                                        <button type="button" class="close waves-effect waves-light" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        {% for client in clients_with_follow_up_today %}
+                                        <p>{{ forloop.counter }}. <a href="{% url 'client_profile' client_id=client.id %}">{{ client.account_name }}</a></p>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary waves-effect waves-light" data-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <!--end card body-->
                 </div>

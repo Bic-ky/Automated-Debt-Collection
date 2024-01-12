@@ -5,6 +5,7 @@ urlpatterns = [
     path('profile/', views.profile , name='profile' ),
 
     path('client/', views.client , name='client' ),
+    path('myclient/', views.myclient , name='myclient' ),
     path('client_profile/<int:client_id>/', views.client_profile, name='client_profile'),
 
     path('edit_client/<int:client_id>/', views.edit_client, name='edit_client'),

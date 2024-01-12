@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="col-xl-12">
+    {% include "alerts.html" %}
+<br>
+<ul class="nav nav-tabs nav-justified mb-3" >
+    <li class="nav-item">
+        <a href="#home1" data-toggle="tab" aria-expanded="true" class="nav-link active" style="background:#d1e4f6;">
+            <i class="mdi mdi-home-variant d-lg-none d-block"></i>
+            <span class="d-none d-lg-block" >My Clients</span>
+        </a>
+    </li>
+    
+</ul>
+<div class="tab-content">
+    <div class="tab-pane active" id="home1">
+        <div class="row">
+            <div class="col-12">
+                <div class="card-body">
+                    <h4 class="card-title">CLIENTS</h4>
+                    <table id="basic-datatable" class="table">
+                        <thead>
+                            <tr style="background:#d1e4f6;">
+                                <th>S.N</th>
+                                <th>Client Id</th>
+                                <th>Client Name</th>
+                                <th>Group</th>
+                                <th>Pan no:</th>
+                                <th>Overdue</th>
+                                <th>Overdue + 120d</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for client in clients %}
+                                <tr style="background:#dff0d8;">
+                                    
+                                    <td>{{ forloop.counter }}</td>
+                                        
+                                    <td>{{ client.short_name }}</td>
+                                    <td>
+                                        <b>
+                                            <a href="{% url 'client_profile' client_id=client.id %}">{{ client.account_name }}</a>
+                                        </b>
+                                        &emsp;
+                                        <a href="{% url 'edit_client' client_id=client.id %}">
+                                            <i class="dripicons-document-edit text-success"></i>
+                                        </a>
+                                    </td>
+                                    <td>{{ client.group }}</td>
+                                    <td>{{ client.pan_number }}</td>
+                                    <td><b>रु‎ {{ client.balance }}</td>
+                                    <td><b>रु‎ {{ client.overdue120 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        
+                    </table>
+                    
+                </div> <!-- end card body-->
+            </div><!-- end col-->
+        </div>
+        <!-- end row-->
+    </div>
+    
+    
+</div>
+</div> <!-- end col -->
+
+
+
+
+
+
+<!-- end row-->
+{% endblock content %}
