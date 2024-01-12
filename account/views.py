@@ -161,6 +161,32 @@ def admindashboard(request):
                 collector_data[collector.user_name] += total_due
             else:
                 collector_data[collector.user_name] = total_due
+    # Calculate the date 15 days ago
+    fifteen_days_ago = timezone.now() - timedelta(days=15)
+
+    # Filter daily balances for the last 15 days
+    daily_balances = DailyBalance.objects.filter( date__gte=fifteen_days_ago).order_by('date')
+
+    # Prepare data for Morris Line Chart
+        # Prepare data for Morris Line Chart
+    chart_data = {}
+
+    for daily_balance in daily_balances:
+        collector_name = daily_balance.collector.user_name  # Assuming collector is a ForeignKey to User
+
+        if collector_name in chart_data:
+            chart_data[collector_name].append({
+                'y': collector_name,
+                'balance': float(daily_balance.total_balance),
+            })
+        else:
+            chart_data[collector_name] = [{
+                'y': collector_name,
+                'balance': float(daily_balance.total_balance),
+            }]
+
+
+    print(chart_data)
 
     context = {
         'clients' : clients ,
@@ -170,6 +196,7 @@ def admindashboard(request):
         'top_clients' : top_clients ,
         'collector' : collector ,
         'collector_data': collector_data ,
+        'chart_data' : json.dumps(chart_data), 
     }
     return render(request ,'admin_dash.html', context)
 

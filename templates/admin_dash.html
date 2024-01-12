@@ -177,6 +177,30 @@
         
     </div> <!-- container-fluid -->
 </div>
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-body">
+               
+                <h4 class="card-title d-inline-block">Overdue Trend (15 days)</h4>
+
+                <div id="line-chart"></div>
+
+                <div class="row text-center mt-4">
+                    <div class="col-12">
+                        <h4>Rs {{ grand_total_balance|floatformat:2}}</h4>
+                        <p class="text-muted mb-0">Total Recievable</p>
+                    </div>
+                    
+                </div>
+
+            </div>
+            <!--end card body-->
+
+        </div>
+        <!--end card-->
+    </div>
+    <!--end col-->
 
 <script>
     $(document).ready(function () {
@@ -210,7 +234,24 @@
                 },
             });
         }
+
+        // Morris line chart (Overdue for Collector)
+        if ($('#line-chart').length) {
+            // Initialize Morris Line Chart
+            Morris.Line({
+                element: 'line-chart',
+                data: {{ chart_data|safe }},
+                xkey: 'y',
+                ykeys: ['balance'],
+                labels: ['Balance'],
+                parseTime: false,  // If 'y' values are not dates, set this to false
+                hideHover: 'auto',
+                resize: true
+            });
+        }
     });
+
+    
 </script>
 
 {% endblock content %}

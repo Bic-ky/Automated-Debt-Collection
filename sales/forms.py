@@ -12,6 +12,7 @@ class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
         fields = '__all__'
+        exclude = ['grant_period']
         widgets = {
             'short_name': forms.TextInput(attrs={'class': 'form-control'}),
             'account_name': forms.TextInput(attrs={'class': 'form-control'}),

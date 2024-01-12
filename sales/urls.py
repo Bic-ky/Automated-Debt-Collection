@@ -19,6 +19,7 @@ urlpatterns = [
     
    
     path('action/', views.action, name='action'),
+    path('delete_action/<int:action_id>/', views.delete_action, name='delete_action'),
     path('aging/', views.aging, name='aging'),
     
     path('get_client_names/', views.get_client_names, name='get_client_names'),

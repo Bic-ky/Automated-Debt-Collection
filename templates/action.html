@@ -150,13 +150,14 @@
                       <table id="auto-datatable" class="table custom-datatable">
                           <thead>
                               <tr style="background:#d1e4f6;">
-                                  <th>Completed</th>
+                                  <th class="text-center">Completed</th>
                                   <th>Client Name</th>
                                   <th>Action Date</th>
                                   <th>Action Type</th>
                                   <th>SMS Type</th>
                                   <th>Action Amount</th>
                                   <th>Collector</th>
+                                  <th class="text-center">Delete Action</th>
                               </tr>
                           </thead>
                           <tbody>
@@ -170,7 +171,9 @@
                                                   <i class="mdi mdi-close-circle-outline mdi-24px" style="color: red;"></i>
                                               {% endif %}
                                           </td>
-                                          <td><a href="{% url 'client_profile' client_id=action.short_name.id %}">{{ action.short_name }}</a></td>
+                                          <td><a href="{% url 'client_profile' client_id=action.short_name.id %}">{{ action.short_name }} 
+                                            
+                                        </a></td>
                                           <td>{{ action.action_date }}</td>
                                           <td>
                                               {% if action.action_type == 'SMS' %}
@@ -192,7 +195,9 @@
                                           <td><strong>{{ action.subtype }}</strong></td>
                                           <td>Rs {{ action.action_amount }}</td>
                                           <td>{{ action.short_name.collector }}</td>
-                                         
+                                          <td class="text-center"><a  href="{% url 'delete_action' action_id=action.id %}">
+                                            <i class="feather-trash-2 text-danger"></i>
+                                        </a></td>
                                       </tr>
                                   {% endif %}
                               {% endfor %}
