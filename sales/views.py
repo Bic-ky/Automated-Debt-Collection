@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from .models import Action
 from .filters import ActionFilter
-from .models import Client, Bill, Action,User,DailyBalance
+from .models import Client, Bill, Action,User,DailyBalance,UserBalance
 from .resources import BillResource
 from django.contrib import messages
 from .forms import ExcelUploadForm, ClientForm, ActionUpdateForm, ActionCreationForm,SendSMSForm
@@ -24,7 +24,13 @@ from django.core.serializers.json import DjangoJSONEncoder
 import logging
 from django.template import Context, Template
 import json
-
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.conf import settings
+from django.contrib.sites.shortcuts import get_current_site
+from django.urls import reverse
+from django.shortcuts import render, redirect
+from django.contrib import messages
 
 
 # Create your views here.
@@ -228,6 +234,7 @@ def upload_excel(request):
                             update_client_balance(existing_bill.short_name)
                             overdue120d(existing_bill.short_name)
                             calculate_total_balance_for_all_collectors()
+                            update_collector_balances()
                             delete_actions()                            
                             continue
                         
@@ -254,6 +261,7 @@ def upload_excel(request):
                         update_client_balance(client)
                         overdue120d(client)
                         calculate_total_balance_for_all_collectors()
+                        update_collector_balances()
                                                    
                     except Client.DoesNotExist:
                         error_messages.append(f'Client "{short_name_value}" not found at row {index + 2}\n')
@@ -271,7 +279,10 @@ def upload_excel(request):
                 for error_message in error_messages:
                     messages.error(request, error_message)
                 
-                 
+                update_subject = 'Excel File Update Notification'
+                update_message = f'The Excel file has been successfully uploaded on {timezone.now()}'
+                send_update_email(update_subject, update_message) 
+                
                 return redirect('upload_excel')
 
             except Exception as e:
@@ -864,3 +875,55 @@ def calculate_total_balance_for_all_collectors():
         else:
             # Create a new DailyBalance entry
             DailyBalance.objects.create(collector=collector, total_balance=total_balance, date=today)
+
+def update_collector_balances():
+    # Get all collectors (users with role USER)
+    collectors = User.objects.filter(role=User.USER)
+
+    # Calculate yesterday's date
+    yesterday = datetime.now().date() - timedelta(days=1)
+
+    for collector in collectors:
+        # Get or create UserBalance for the collector
+        user_balance, created = UserBalance.objects.get_or_create(user=collector)
+
+        # Get yesterday's balance
+        yesterday_balance = DailyBalance.objects.filter(
+            collector=collector,
+            date=yesterday
+        ).values('total_balance').first()
+
+        # Get today's balance
+        today_balance = DailyBalance.objects.filter(
+            collector=collector,
+            date=datetime.now().date()
+        ).values('total_balance').first()
+
+        if yesterday_balance and today_balance:
+            # Calculate the difference as yesterday's balance minus today's balance
+            balance_difference = yesterday_balance['total_balance'] - today_balance['total_balance']
+
+            if balance_difference > 0:
+                # Update collector_balance by subtracting the positive difference
+                user_balance.collector_balance = F('collector_balance') + balance_difference
+                user_balance.save()
+
+                # Update the DailyBalance for today with the new collector_balance
+                DailyBalance.objects.filter(
+                    collector=collector,
+                    date=datetime.now().date()
+                ).update(total_balance=user_balance.collector_balance)
+
+def send_update_email(subject, message):
+    
+    from_email = settings.DEFAULT_FROM_EMAIL
+    
+    to_email = "adityachaudhary700@example.com"  
+    
+    # Create an EmailMessage with the subject, message, and sender/recipient information
+    mail = EmailMessage(subject, message, from_email, to=[to_email])
+    
+    # Specify that the email content type is plain text
+    mail.content_subtype = "plain"
+    
+    mail.send()

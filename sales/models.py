@@ -1,6 +1,7 @@
 from django.db import models
 from account.models import User
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 class Client(models.Model):
     short_name = models.CharField(max_length=255, unique=True , null=True, blank=True)
@@ -112,6 +113,27 @@ class DailyBalance(models.Model):
     class Meta:
         unique_together = ['collector', 'date']
     
+
+
+class UserBalance(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='balance', limit_choices_to={'role': User.USER})
+    collector_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    last_updated = models.DateTimeField(default=timezone.now)
+
+    def clean(self):
+        # Ensure that the associated user has the role USER
+        if self.user.role != User.USER:
+            raise ValidationError("The associated user must have the role USER.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.user.full_name}'s Balance"
+
+    class Meta:
+        verbose_name_plural = 'User Balances'
 
     
 
