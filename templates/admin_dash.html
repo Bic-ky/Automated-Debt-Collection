@@ -169,44 +169,50 @@
                 </div>
                 <!--end card-->
             </div>
-            <!--end col-->
-
+            
         </div>
         <!--end row-->
 
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                       
+                        <h4 class="card-title d-inline-block">Collector Overdue Trend (15 days)</h4>
         
-    </div> <!-- container-fluid -->
-</div>
-<div class="row">
-    <div class="col-lg-12">
-        <div class="card">
-            <div class="card-body">
-               
-                <h4 class="card-title d-inline-block">Overdue Trend (15 days)</h4>
-
-                <div id="line-chart"></div>
-
-                <div class="row text-center mt-4">
-                    <div class="col-12">
-                        <h4>Rs {{ grand_total_balance|floatformat:2}}</h4>
-                        <p class="text-muted mb-0">Total Recievable</p>
+                        <div id="line-chart"></div>
+        
+                        <div class="row text-center mt-4">
+                            <div class="col-12">
+                                <h4>Rs {{total_overdue}}</h4>
+                                <p class="text-muted mb-0">Total Recievable</p>
+                            </div>
+                            
+                        </div>
+        
                     </div>
-                    
+                    <!--end card body-->
+        
                 </div>
-
+                <!--end card-->
             </div>
-            <!--end card body-->
-
-        </div>
-        <!--end card-->
     </div>
+    </div> <!-- container-fluid -->
+    
+<!--end col-->
+
     <!--end col-->
+    
+
+</div>
+<!-- Add this in the <head> section of your HTML -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 <script>
     $(document).ready(function () {
         // Check if the element with id "collector-chart" exists
         if ($("#collector-chart").length) {
-            // Embed dynamic data directly into the template
+            // Your existing Chart.js code for the bar chart
             var dynamicData = {
                 labels: [{% for collector, total_due in collector_data.items %}'{{ collector }}',{% endfor %}],
                 datasets: [{
@@ -215,7 +221,7 @@
                     backgroundColor: '#3F51B5',
                 }],
             };
-
+    
             var ctx = document.getElementById('collector-chart').getContext('2d');
             new Chart(ctx, {
                 type: 'bar',
@@ -233,24 +239,59 @@
                     },
                 },
             });
-        }
-
-        // Morris line chart (Overdue for Collector)
-        if ($('#line-chart').length) {
-            // Initialize Morris Line Chart
-            Morris.Line({
-                element: 'line-chart',
-                data: {{ chart_data|safe }},
-                xkey: 'y',
-                ykeys: ['balance'],
-                labels: ['Balance'],
-                parseTime: false,  // If 'y' values are not dates, set this to false
-                hideHover: 'auto',
-                resize: true
-            });
+    
+            // Plotly Line Chart (For each collector)
+            var chartData = {{ chart_data|safe }};
+            if ($("#line-chart").length) {
+                var plotlyData = [];
+    
+                chartData.forEach(function (collectorData) {
+                    var collectorName = collectorData.collector;
+                    var collectorLineData = collectorData.data;
+    
+                    plotlyData.push({
+                        x: collectorLineData.map(item => item.y),
+                        y: collectorLineData.map(item => item.balance),
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: collectorName,
+                        line: {
+                            color: getRandomColor(),
+                        },
+                    });
+                });
+    
+                // Layout for Plotly Line Chart
+                var layout = {
+                    showlegend: true,
+                    legend: {
+                        x: 1,
+                        xanchor: 'left',
+                        y: 1,
+                    },
+                    xaxis: {
+                        title: 'Date',
+                    },
+                    yaxis: {
+                        title: 'Balance',
+                    },
+                };
+    
+                // Render Plotly Line Chart
+                Plotly.newPlot('line-chart', plotlyData, layout);
+            }
         }
     });
-
+    
+    // Function to generate a random color
+    function getRandomColor() {
+        var letters = '0123456789ABCDEF';
+        var color = '#';
+        for (var i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
     
 </script>
 

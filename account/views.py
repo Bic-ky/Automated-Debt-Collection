@@ -169,25 +169,31 @@ def admindashboard(request):
 
     # Prepare data for Morris Line Chart
         # Prepare data for Morris Line Chart
-    chart_data = {}
+    chart_data = []
 
     for daily_balance in daily_balances:
         collector_name = daily_balance.collector.user_name  # Assuming collector is a ForeignKey to User
 
-        if collector_name in chart_data:
-            chart_data[collector_name].append({
-                'y': collector_name,
-                'balance': float(daily_balance.total_balance),
-            })
+        data_point = {
+            'y': daily_balance.date.strftime('%Y-%m-%d'),
+            'balance': float(daily_balance.total_balance),
+        }
+
+        # Check if collector_name is already present in chart_data
+        collector_exists = any(collector['collector'] == collector_name for collector in chart_data)
+
+        if collector_exists:
+            # If collector is present, append data_point to its data array
+            for collector in chart_data:
+                if collector['collector'] == collector_name:
+                    collector['data'].append(data_point)
         else:
-            chart_data[collector_name] = [{
-                'y': collector_name,
-                'balance': float(daily_balance.total_balance),
-            }]
-
-
-    print(chart_data)
-
+            # If collector is not present, add a new entry with collector name and data array
+            chart_data.append({
+                'collector': collector_name,
+                'data': [data_point],
+            })
+    
     context = {
         'clients' : clients ,
         'total_overdue' : total_overdue ,
@@ -196,7 +202,7 @@ def admindashboard(request):
         'top_clients' : top_clients ,
         'collector' : collector ,
         'collector_data': collector_data ,
-        'chart_data' : json.dumps(chart_data), 
+        'chart_data': json.dumps(chart_data),
     }
     return render(request ,'admin_dash.html', context)
 
