@@ -11,7 +11,7 @@ from django.utils.http import urlsafe_base64_decode
 from .models import User
 from .utils import detectUser, send_verification_email
 from django.contrib.auth.tokens import default_token_generator
-from sales.models import Client,Bill,Action,DailyBalance
+from sales.models import Client,Bill,Action,DailyBalance,UserBalance,CompanyBalance
 from django.db.models import Sum, F, Max, Q
 import json
 from django.http import JsonResponse
@@ -102,7 +102,8 @@ def userdashboard(request):
         })
         
     
-
+    mycollection=UserBalance.objects.get(user=user)
+    
     # Calculate aging data
     aging_data = {f'cycle{i}': bills.aggregate(Sum(f'cycle{i}'))[f'cycle{i}__sum'] or 0 for i in range(1, 10)}
 
@@ -129,6 +130,7 @@ def userdashboard(request):
         'top_clients': top_clients,
         'collector_count': collector_count,
         'chart_data': chart_data,
+        'mycollection':mycollection,
     }
 
     return render(request, 'user_dash.html', context)
@@ -161,11 +163,10 @@ def admindashboard(request):
                 collector_data[collector.user_name] += total_due
             else:
                 collector_data[collector.user_name] = total_due
-    # Calculate the date 15 days ago
-    fifteen_days_ago = timezone.now() - timedelta(days=15)
+    
 
     # Filter daily balances for the last 15 days
-    daily_balances = DailyBalance.objects.filter( date__gte=fifteen_days_ago).order_by('date')
+    daily_balances = DailyBalance.objects.order_by('date')
 
     # Prepare data for Morris Line Chart
         # Prepare data for Morris Line Chart
@@ -194,6 +195,14 @@ def admindashboard(request):
                 'data': [data_point],
             })
     
+    company_balance = CompanyBalance.objects.order_by('date')
+    # Prepare data for Morris Line Chart
+    company_data = []
+    for company_balance in company_balance:
+        company_data.append({
+            'y': company_balance.date.strftime('%Y-%m-%d'),
+            'total_balance': float(company_balance.total_balance),
+        })
     context = {
         'clients' : clients ,
         'total_overdue' : total_overdue ,
@@ -203,6 +212,8 @@ def admindashboard(request):
         'collector' : collector ,
         'collector_data': collector_data ,
         'chart_data': json.dumps(chart_data),
+        'company_data':company_data,
+        
     }
     return render(request ,'admin_dash.html', context)
 

@@ -138,3 +138,12 @@ class UserBalance(models.Model):
 
     
 
+class CompanyBalance(models.Model):
+    total_balance = models.DecimalField(max_digits=15, decimal_places=2)
+    date = models.DateField(default=timezone.now)
+
+    def __str__(self):
+        return f"Balance on {self.date}"
+
+    class Meta:
+        unique_together = ['date']

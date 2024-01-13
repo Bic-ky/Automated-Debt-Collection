@@ -835,7 +835,6 @@ def delete_action(request , action_id):
     messages.success(request, 'Action has been deleted successfully!')
     return redirect('action')
 
-
 def calculate_percentages(aging_data, total_amount):
     percentage_0_30_days = round((float(aging_data['cycle1']) / float(total_amount)) * 100)
     percentage_31_60_days = round((float(aging_data['cycle2']) / float(total_amount)) * 100)
