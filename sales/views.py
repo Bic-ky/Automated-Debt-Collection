@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from .models import Action
 from .filters import ActionFilter
-from .models import Client, Bill, Action,User,DailyBalance,UserBalance
+from .models import Client, Bill, Action,User,DailyBalance,UserBalance,CompanyBalance
 from .resources import BillResource
 from django.contrib import messages
 from .forms import ExcelUploadForm, ClientForm, ActionUpdateForm, ActionCreationForm, ExtendActionForm,SendSMSForm
@@ -234,6 +234,7 @@ def upload_excel(request):
                             overdue120d(existing_bill.short_name)
                             calculate_total_balance_for_all_collectors()
                             update_collector_balances()
+                            company_balance()
                             delete_actions()                            
                             continue
                         
@@ -261,6 +262,7 @@ def upload_excel(request):
                         overdue120d(client)
                         calculate_total_balance_for_all_collectors()
                         update_collector_balances()
+                        company_balance()
                                                    
                     except Client.DoesNotExist:
                         error_messages.append(f'Client "{short_name_value}" not found at row {index + 2}\n')
@@ -882,6 +884,21 @@ def calculate_total_balance_for_all_collectors():
             # Create a new DailyBalance entry
             DailyBalance.objects.create(collector=collector, total_balance=total_balance, date=today)
 
+def company_balance():
+    today = date.today()
+    
+    total_balance = Client.objects.aggregate(total_balance=Sum('balance'))['total_balance'] or 0
+    # Check if a DailyBalance entry already exists for today and this collector
+    daily_balance_entry = CompanyBalance.objects.filter(date=today).first()
+    
+    if daily_balance_entry:
+        # Update existing CompanyBalance entry with new total_balance
+        daily_balance_entry.total_balance = total_balance
+        daily_balance_entry.save()
+    else:
+        # Create a new DailyBalance entry
+        DailyBalance.objects.create(total_balance=total_balance, date=today)
+    
 def update_collector_balances():
     # Get all collectors (users with role USER)
     collectors = User.objects.filter(role=User.USER)

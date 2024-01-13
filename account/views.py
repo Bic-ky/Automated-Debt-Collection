@@ -16,6 +16,7 @@ from django.db.models import Sum, F, Max, Q
 import json
 from django.http import JsonResponse
 from django.utils import timezone
+from datetime import datetime, timedelta, date
 # Create your views here.
 
 
@@ -81,8 +82,11 @@ def userdashboard(request):
     # Filter clients for the currently logged-in user
     clients = Client.objects.filter(collector=user)
 
-    # Calculate total cycles for each client
-    total_cycles_by_client = {client.id: calculate_total_cycles_for_client(client) for client in clients}
+    if clients.exists():  # Check if there are clients before calculating total cycles
+        # Calculate total cycles for each client
+        total_cycles_by_client = {client.id: calculate_total_cycles_for_client(client) for client in clients}
+    else:
+        total_cycles_by_client = {}
 
     # Filter bills for the clients associated with the logged-in user
     bills = Bill.objects.filter(short_name__collector=request.user)
@@ -113,9 +117,14 @@ def userdashboard(request):
     # Calculate the grand total sum of all bills' balance
     grand_total_balance = bills.aggregate(Sum('balance'))['balance__sum'] or 0
 
-    # Calculate percentages based on grand total balance
-    percentages = calculate_percentages(aging_data, grand_total_balance)
-    
+    # Check if there are clients associated with the logged-in user
+    if clients.exists():
+        # Calculate percentages based on grand total balance
+        percentages = calculate_percentages(aging_data, grand_total_balance)
+    else:
+        # Set percentages to an empty dictionary or handle it as per your requirement
+        percentages = {}
+        
     # Get the top 5 clients with the highest balance
     top_clients = clients.order_by('-balance')[:5]
 
@@ -145,6 +154,29 @@ def admindashboard(request):
     bills = Bill.objects.all()
     collector = User.objects.filter(role=2)
     total_collector = collector.count
+    
+    # Calculate yesterday's date
+    yesterday = datetime.now().date() - timedelta(days=1)
+    
+    # Get yesterday's balance
+    yesterday_balance = CompanyBalance.objects.filter(date=yesterday).values('total_balance').first()
+    
+    # Get today's balance
+    today_balance =CompanyBalance.objects.filter(date=datetime.now().date()).values('total_balance').first()
+    
+    
+    if yesterday_balance and today_balance:
+        # Calculate the difference as yesterday's balance minus today's balance
+        balance_difference = yesterday_balance['total_balance'] - today_balance['total_balance']
+        
+
+        if balance_difference > 0:
+            # Update collector_balance by subtracting the positive difference
+            balance_difference = 'Rs ' + str(balance_difference)
+
+    else:
+        balance_difference=   'Rs 0'
+                
     # Calculate the grand total sum of all bills' balance
     total_balance = bills.aggregate(Sum('balance'))['balance__sum'] or 0
 
@@ -164,9 +196,11 @@ def admindashboard(request):
             else:
                 collector_data[collector.user_name] = total_due
     
+    # Calculate the date 15 days ago
+    fifteen_days_ago = timezone.now() - timedelta(days=15)
 
     # Filter daily balances for the last 15 days
-    daily_balances = DailyBalance.objects.order_by('date')
+    daily_balances = DailyBalance.objects.filter( date__gte=fifteen_days_ago).order_by('date')
 
     # Prepare data for Morris Line Chart
         # Prepare data for Morris Line Chart
@@ -195,14 +229,15 @@ def admindashboard(request):
                 'data': [data_point],
             })
     
-    company_balance = CompanyBalance.objects.order_by('date')
+    company_balance = CompanyBalance.objects.filter( date__gte=fifteen_days_ago).order_by('date')
     # Prepare data for Morris Line Chart
     company_data = []
     for company_balance in company_balance:
         company_data.append({
             'y': company_balance.date.strftime('%Y-%m-%d'),
-            'total_balance': float(company_balance.total_balance),
+            'balance': float(company_balance.total_balance),
         })
+    
     context = {
         'clients' : clients ,
         'total_overdue' : total_overdue ,
@@ -213,6 +248,8 @@ def admindashboard(request):
         'collector_data': collector_data ,
         'chart_data': json.dumps(chart_data),
         'company_data':company_data,
+        'balance_difference':balance_difference,
+        'yesterday':yesterday,
         
     }
     return render(request ,'admin_dash.html', context)

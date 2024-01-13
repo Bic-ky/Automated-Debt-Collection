@@ -17,11 +17,11 @@
                             <h5 class="card-title mb-0">Total Due</h5>
                         </div>
                         <div class="row d-flex align-items-center mb-4">
-                            <div class="col-8">
-                                <h3 class="d-flex align-items-center mb-0">
+                            
+                                <h3 class="d-flex align-items-center ml-2 mb-0">
                                     Rs. {{total_overdue}}
                                 </h3>
-                            </div>
+                            
                             
                         </div>
                     </div>
@@ -57,11 +57,11 @@
                             <h5 class="card-title mb-0">Active Collectors</h5>
                         </div>
                         <div class="row d-flex align-items-center mb-4">
-                            <div class="col-8">
+                            
                                 <h3 class="d-flex align-items-center mb-0">
                                     {{ total_collector }}
                                 </h3>
-                            </div>
+                            
                             
                         </div>
                     </div>
@@ -74,13 +74,13 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="mb-4">
-                            <span class="badge badge-soft-primary float-right">Collection </span>
-                            <h5 class="card-title mb-0">Todays Collection</h5>
+                            <span class="badge badge-soft-primary float-right">{{yesterday}} </span>
+                            <h5 class="card-title mb-0">Daily Collection</h5>
                         </div>
                         <div class="row d-flex align-items-center mb-4">
                             <div class="col-8">
                                 <h3 class="d-flex align-items-center mb-0">
-                                    1,15,187
+                                     {{balance_difference}}
                                 </h3>
                             </div>
                            
@@ -310,11 +310,11 @@
         if ($('#company-chart').length) {
             // Prepare data for Plotly Line Chart for company
             var companyData = {{ company_data|safe }};
-    
+
             // Create an array for x and y values
             var xValues = companyData.map(item => item.y);
-            var yValues = companyData.map(item => item.total_balance);
-    
+            var yValues = companyData.map(item => item.balance);
+
             // Create a trace for Plotly Line Chart
             var trace = {
                 x: xValues,
@@ -323,10 +323,10 @@
                 mode: 'lines+markers',
                 name: 'Total Balance',
                 line: {
-                    color: '#e17f36', 
+                    color: '#e17f36', // Use the specified color
                 },
             };
-    
+
             // Layout for Plotly Line Chart for company
             var layoutCompany = {
                 showlegend: true,
@@ -342,10 +342,11 @@
                     title: 'Total Balance',
                 },
             };
-    
+
             // Render Plotly Line Chart for company
             Plotly.newPlot('company-chart', [trace], layoutCompany);
         }
+
     });
     
     // Function to generate a random color
@@ -357,7 +358,7 @@
         }
         return color;
     }
-       
+    
 </script>
 
 {% endblock content %}
