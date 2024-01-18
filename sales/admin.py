@@ -16,9 +16,9 @@ class BillData(ImportExportActionModelAdmin):
 
 @admin.register(Action)
 class ActionData(ImportExportActionModelAdmin):
-    list_display = ['action_date','short_name', 'action_type','type','pause','completed','subtype','followup_date']
+    list_display = ['action_date','short_name', 'action_type','type','completed','subtype','followup_date']
     search_fields = ['type']
-    list_editable = ['completed','pause','type','action_type']  
+    list_editable = ['completed','type','action_type']  
     
 @admin.register(DailyBalance)
 class BalanceData(ImportExportActionModelAdmin):

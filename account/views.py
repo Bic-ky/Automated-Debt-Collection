@@ -105,9 +105,11 @@ def userdashboard(request):
             'balance': float(daily_balance.total_balance),
         })
         
-    
-    mycollection=UserBalance.objects.get(user=user)
-    
+    if clients.exists():
+        mycollection = UserBalance.objects.filter(user=user)
+    else:
+        mycollection = None
+
     # Calculate aging data
     aging_data = {f'cycle{i}': bills.aggregate(Sum(f'cycle{i}'))[f'cycle{i}__sum'] or 0 for i in range(1, 10)}
 

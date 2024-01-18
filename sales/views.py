@@ -2,6 +2,7 @@ from django.forms import ValidationError
 from datetime import datetime, timedelta, date
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+
 from .models import Action
 from .filters import ActionFilter
 from .models import Client, Bill, Action,User,DailyBalance,UserBalance,CompanyBalance
@@ -211,6 +212,7 @@ def upload_excel(request):
                             short_name=client,
                         ).first()
 
+
                         if existing_bill:
                             # Update existing Bill with new data
                             existing_bill.type = row['type']
@@ -232,14 +234,14 @@ def upload_excel(request):
                             # Call the functions to update the client's balance and overdue120
                             update_client_balance(existing_bill.short_name)
                             overdue120d(existing_bill.short_name)
-                            calculate_total_balance_for_all_collectors()
-                            update_collector_balances()
                             company_balance()
+                            
                             delete_actions()                            
                             continue
-                        
+
+                        print("Before creating new_bill")
                         # Create a new Bill instance
-                        Bill.objects.create(
+                        new_bill=Bill.objects.create(
                             type=row['type'],
                             bill_no=row['bill_no'],
                             due_date=row['due_date'],
@@ -257,18 +259,27 @@ def upload_excel(request):
                             short_name=client,
                         )
                         success_count += 1
+                        print(new_bill)
+                        print(f"Due Date: {new_bill.due_date}")
                         # Call the function to update the client's balance after each Bill creation
                         update_client_balance(client)
                         overdue120d(client)
-                        calculate_total_balance_for_all_collectors()
-                        update_collector_balances()
+                        create_actions_for_bill(new_bill)
                         company_balance()
+
+                
+                        
+
                                                    
                     except Client.DoesNotExist:
                         error_messages.append(f'Client "{short_name_value}" not found at row {index + 2}\n')
                     except ValidationError as e:
                         error_messages.append(f'Validation error at row {index + 2}: {e}\n')
+                    except Exception as e:
+                        error_messages.append(f'Error processing row {index + 2}: {e}')
                 
+                    
+                                
                 if success_count > 0:
                     success_messages.append(f"{success_count} records successfully uploaded.")
                     download_link = reverse('download_excel')
@@ -280,8 +291,13 @@ def upload_excel(request):
                 for error_message in error_messages:
                     messages.error(request, error_message)
                 
+
+                # calculate_total_balance_for_all_collectors()
+                # update_collector_balances()
+                # company_balance()
                 update_subject = 'Excel File Update Notification'
                 update_message = f'The Excel file has been successfully uploaded on {timezone.now()}'
+
                 send_update_email(update_subject, update_message) 
                 
                 return redirect('upload_excel')
@@ -433,6 +449,7 @@ def update_client_balance(client):
 
     # Update the balance field in the Client model
     client.balance = total_balance_sum
+    
     client.save()
    
 def client(request):
@@ -556,61 +573,74 @@ def add_client(request):
 
     return render(request, 'add_client.html', {'form': form, 'client': None})
        
-@receiver(post_save, sender=Bill)
-def create_actions_for_due_bills(sender, instance, created, **kwargs):
-    # Only proceed if a new bill is created
-    if created:
-        # Get today's date
-        today = timezone.now().date()
+def create_actions_for_bill(bill):
+    # Skip if due_date is None
+    if bill.due_date is None:
+        print(f"Invalid 'due_date' for Bill {bill.pk}. Skipping action creation.")
+        return
 
-        # Calculate target_date
-        target_date = instance.due_date + timedelta(days=instance.short_name.grant_period)
+    # Convert 'due_date' to datetime if it's a string
+    if isinstance(bill.due_date, str):
+        try:
+            bill.due_date = datetime.strptime(bill.due_date, '%Y-%m-%d').date()
+        except ValueError:
+            print(f"Invalid 'due_date' format for Bill {bill.id}. Skipping action creation.")
+            return
 
-        # Create Action 1
-        Action.objects.create(
-            action_date=target_date,
+    # Add a check to delete existing incomplete actions for the client
+    Action.objects.filter(short_name=bill.short_name, completed=False).delete()
+    
+    grant_period_days = int(bill.short_name.grant_period)
+    target_date = bill.due_date + timedelta(days=grant_period_days)
+
+    # Create Action 1
+    action1 = Action.objects.create(
+        action_date=target_date,
+        type='auto',
+        action_type='SMS',
+        action_amount=bill.short_name.balance,
+        short_name=bill.short_name,
+        completed=False,
+        subtype='Reminder'
+    )
+    print(f"Action 1 Created: {action1}")
+
+    # Create Action 2
+    action2 = Action.objects.create(
+        action_date=target_date + timedelta(days=1),
+        type='auto',
+        action_type='SMS',
+        action_amount=bill.short_name.balance,
+        short_name=bill.short_name,
+        completed=False,
+        subtype='Gentle'
+    )
+    print(f"Action 2 Created: {action2}")
+
+    # Create Action 3
+    action3 = Action.objects.create(
+        action_date=target_date + timedelta(days=3),
+        type='auto',
+        action_type='SMS',
+        action_amount=bill.short_name.balance,
+        short_name=bill.short_name,
+        completed=False,
+        subtype='Strong'
+    )
+    print(f"Action 3 Created: {action3}")
+
+    # Create Action 4 (if group is 'Normal')
+    if bill.short_name.group == 'Normal':
+        action4 = Action.objects.create(
+            action_date=target_date + timedelta(days=7),
             type='auto',
             action_type='SMS',
-            action_amount=instance.short_name.balance,
-            short_name=instance.short_name,
+            action_amount=bill.short_name.balance,
+            short_name=bill.short_name,
             completed=False,
-            subtype='Reminder'
+            subtype='Final'
         )
-
-        # Create Action 2
-        Action.objects.create(
-            action_date=target_date + timedelta(days=1),
-            type='auto',
-            action_type='SMS',
-            action_amount=instance.short_name.balance,
-            short_name=instance.short_name,
-            completed=False,
-            subtype='Gentle'
-        )
-
-        # Create Action 3
-        Action.objects.create(
-            action_date=target_date + timedelta(days=3),
-            type='auto',
-            action_type='SMS',
-            action_amount=instance.short_name.balance,
-            short_name=instance.short_name,
-            bill_no=instance,
-            completed=False,
-            subtype='Strong'
-        )
-
-        # Create Action 4 (if group is 'Normal')
-        if instance.short_name.group == 'Normal':
-            Action.objects.create(
-                action_date=target_date + timedelta(days=7),
-                type='auto',
-                action_type='SMS',
-                action_amount=instance.short_name.balance,
-                short_name=instance.short_name,
-                completed=False,
-                subtype='Final'
-            )
+        print(f"Action 4 Created: {action4}")
 
 def get_client_names(request):
     # Query all clients and their associated bill numbers
@@ -651,7 +681,7 @@ def send_sms(phone_number, sms_content, simulate_success=False):
 
     url = "https://api.sparrowsms.com/v2/sms/"
     data = {
-        'token': 'v2_M1vtw2aeNOXETkVFSgoOXmOchwN.BqR',
+        'token': 'v2_M1vtw2aeNOXETkVFSgoOXmOchwN.5BqR',
         'from': 'Demo',
         'to': phone_number,
         'text': sms_content,
@@ -674,7 +704,7 @@ def check_and_trigger_sms(sender, instance, **kwargs):
     today = timezone.now().date()
 
     # Check if the action type is 'auto' and action_type is 'SMS'
-    if instance.type == 'auto' and instance.action_type == 'SMS' and instance.action_date >= today and not instance.completed: 
+    if instance.type == 'auto' and instance.action_type == 'SMS' and instance.action_date == today and not instance.completed: 
         try:
             # Fetch related client and bill
             client = instance.short_name
@@ -855,11 +885,11 @@ def delete_actions():
     actions_to_delete = Action.objects.filter(
         completed=False,
         type='auto',
-        bill_no__balance__lte=300
+        short_name__balance__lte=300
     )
-
     # Delete the selected actions
     actions_to_delete.delete()
+
 
 def calculate_total_balance_for_all_collectors():
     today = date.today()
@@ -886,18 +916,20 @@ def calculate_total_balance_for_all_collectors():
 
 def company_balance():
     today = date.today()
-    
+
+    # Calculate the total balance by summing up the balances of all clients
     total_balance = Client.objects.aggregate(total_balance=Sum('balance'))['total_balance'] or 0
-    # Check if a DailyBalance entry already exists for today and this collector
-    daily_balance_entry = CompanyBalance.objects.filter(date=today).first()
-    
-    if daily_balance_entry:
+
+    # Check if a CompanyBalance entry already exists for today
+    company_balance_entry = CompanyBalance.objects.filter(date=today).first()
+
+    if company_balance_entry:
         # Update existing CompanyBalance entry with new total_balance
-        daily_balance_entry.total_balance = total_balance
-        daily_balance_entry.save()
+        company_balance_entry.total_balance = total_balance
+        company_balance_entry.save()
     else:
-        # Create a new DailyBalance entry
-        DailyBalance.objects.create(total_balance=total_balance, date=today)
+        # Create a new CompanyBalance entry
+        CompanyBalance.objects.create(total_balance=total_balance, date=today)
     
 def update_collector_balances():
     # Get all collectors (users with role USER)
@@ -907,35 +939,47 @@ def update_collector_balances():
     yesterday = datetime.now().date() - timedelta(days=1)
 
     for collector in collectors:
-        # Get or create UserBalance for the collector
-        user_balance, created = UserBalance.objects.get_or_create(user=collector)
+        # Get UserBalance for the collector if it exists
+        user_balance = UserBalance.objects.filter(user=collector).first()
 
-        # Get yesterday's balance
-        yesterday_balance = DailyBalance.objects.filter(
+        # Check if last_updated is already set to today's date
+        if user_balance and user_balance.last_updated.date() == timezone.now().date():
+            # Skip if already updated for today
+            continue
+
+        # Get or create UserBalance for the collector
+        if not user_balance:
+            user_balance = UserBalance.objects.create(user=collector)
+
+        # Get yesterday's DailyBalance
+        yesterday_daily_balance = DailyBalance.objects.filter(
             collector=collector,
             date=yesterday
         ).values('total_balance').first()
+        print(yesterday_daily_balance)
 
-        # Get today's balance
-        today_balance = DailyBalance.objects.filter(
+        # Get today's DailyBalance
+        today_daily_balance = DailyBalance.objects.filter(
             collector=collector,
             date=datetime.now().date()
         ).values('total_balance').first()
+        print(today_daily_balance)
 
-        if yesterday_balance and today_balance:
+        if yesterday_daily_balance and today_daily_balance:
             # Calculate the difference as yesterday's balance minus today's balance
-            balance_difference = yesterday_balance['total_balance'] - today_balance['total_balance']
+            balance_difference = yesterday_daily_balance['total_balance'] - today_daily_balance['total_balance']
 
             if balance_difference > 0:
-                # Update collector_balance by subtracting the positive difference
-                user_balance.collector_balance = F('collector_balance') + balance_difference
-                user_balance.save()
+                # Update collector_balance by adding the positive difference
+                user_balance.collector_balance += balance_difference
+            else:
+                # Handle the case where balance_difference is not greater than 0
+                # You may want to log a message or handle it based on your requirements
+                pass
 
-                # Update the DailyBalance for today with the new collector_balance
-                DailyBalance.objects.filter(
-                    collector=collector,
-                    date=datetime.now().date()
-                ).update(total_balance=user_balance.collector_balance)
+            # Update the UserBalance for today with the new collector_balance
+            user_balance.last_updated = timezone.now()
+            user_balance.save()
 
 def send_update_email(subject, message):
     

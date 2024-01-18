@@ -181,7 +181,7 @@
                                                       <i class="mdi mdi-message"></i> {{ action.action_type }}
                                                   </button>
                                                   <br>
-                                                  {% if not action.completed %}<i class="mdi mdi-chat-alert">{{action.description}}</i>{% endif %}
+                                                  {% if not action.completed and action.description %}<i class="mdi mdi-chat-alert">{{action.description}}</i>{% endif %}
                                               {% elif action.action_type == 'Call' %}
                                                   <a tabindex="0" class="btn btn-success waves-effect waves-light" style="width: 150px;" role="button" data-toggle="popover" data-trigger="focus" title="{{action.subtype}}" data-content="{{action.description}}">
                                                       <i class="mdi mdi-phone"></i> {{ action.action_type }}
