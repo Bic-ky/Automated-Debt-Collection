@@ -2,11 +2,9 @@ from django.forms import ValidationError
 from datetime import datetime, timedelta, date
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-
 from .models import Action
 from .filters import ActionFilter
 from .models import Client, Bill, Action,User,DailyBalance,UserBalance,CompanyBalance
-from .resources import BillResource
 from django.contrib import messages
 from .forms import ExcelUploadForm, ClientForm, ActionUpdateForm, ActionCreationForm, ExtendActionForm,SendSMSForm
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -26,15 +24,15 @@ import logging
 from django.template import Context, Template
 import json
 from django.core.mail import EmailMessage
-from django.template.loader import render_to_string
 from django.conf import settings
-from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from account.utils import check_role_admin, check_role_user
 
 # Create your views here.
-
+@login_required(login_url='account:login')
 def profile(request):
     return render(request , 'profile.html')
 
@@ -66,6 +64,8 @@ def convert_nepali_to_ad(nepali_date):
         print(f"Error converting Nepali date: {e}")
         return None  # or return the original value if conversion fails
 
+@login_required(login_url='account:login')
+@user_passes_test(check_role_admin)
 def upload_excel(request):
     success_messages = []
     error_messages = []
@@ -234,9 +234,7 @@ def upload_excel(request):
                             # Call the functions to update the client's balance and overdue120
                             update_client_balance(existing_bill.short_name)
                             overdue120d(existing_bill.short_name)
-                            company_balance()
-                            
-                            delete_actions()                            
+                                                      
                             continue
 
                         print("Before creating new_bill")
@@ -265,7 +263,7 @@ def upload_excel(request):
                         update_client_balance(client)
                         overdue120d(client)
                         create_actions_for_bill(new_bill)
-                        company_balance()
+                        
 
                 
                         
@@ -292,9 +290,10 @@ def upload_excel(request):
                     messages.error(request, error_message)
                 
 
-                # calculate_total_balance_for_all_collectors()
-                # update_collector_balances()
-                # company_balance()
+                calculate_total_balance_for_all_collectors()
+                update_collector_balances()
+                company_balance()
+                delete_actions()  
                 update_subject = 'Excel File Update Notification'
                 update_message = f'The Excel file has been successfully uploaded on {timezone.now()}'
 
@@ -320,6 +319,8 @@ def upload_excel(request):
 
     return render(request, 'upload.html', context)
 
+@login_required(login_url='account:login')
+@user_passes_test(check_role_user)
 def collection(request):
      # Filter clients for the currently logged-in user
     clients = Client.objects.filter(collector=request.user)
@@ -451,11 +452,14 @@ def update_client_balance(client):
     client.balance = total_balance_sum
     
     client.save()
-   
+
+@login_required(login_url='account:login')
+@user_passes_test(check_role_admin)
 def client(request):
     clients = Client.objects.all()
     return render(request , 'client.html' ,  {'clients': clients})
 
+@login_required(login_url='account:login')
 def client_profile(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     actions = Action.objects.filter(short_name=client).order_by('-created')
@@ -543,6 +547,7 @@ def client_profile(request, client_id):
 
     return render(request, 'client_profile.html', context)
 
+@login_required(login_url='account:login')
 def edit_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
 
@@ -556,12 +561,14 @@ def edit_client(request, client_id):
 
     return render(request, 'edit_client.html', {'form': form, 'client': client})
 
+@login_required(login_url='account:login')
 def delete_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     client.delete()
     messages.success(request, 'Client has been deleted successfully!')
     return redirect('client')
 
+@login_required(login_url='account:login')
 def add_client(request):
     if request.method == 'POST':
         form = ClientForm(request.POST)
@@ -681,7 +688,7 @@ def send_sms(phone_number, sms_content, simulate_success=False):
 
     url = "https://api.sparrowsms.com/v2/sms/"
     data = {
-        'token': 'v2_M1vtw2aeNOXETkVFSgoOXmOchwN.5BqR',
+        'token': 'v2_M1vtw2aeNOXETkVFSgoOXmOchwN.BqR',
         'from': 'Demo',
         'to': phone_number,
         'text': sms_content,
@@ -775,6 +782,7 @@ def generate_sms_text(subtype, client):
     context = Context({'client': client, 'agent_name': agent_name, 'contact_number': contact_number})
     return template.render(context)
 
+@login_required(login_url='account:login')
 def action(request):
     clients = Client.objects.all()
     actions = Action.objects.all().order_by('-created')
@@ -790,7 +798,7 @@ def action(request):
     
     # Calculate the count of manual actions that are not completed
     manual_not_completed_count = Action.objects.filter(type='manual', completed=False).count()
-    auto_count = Action.objects.filter(type='auto', completed=False , pause=False).count()
+    auto_count = Action.objects.filter(type='auto', completed=False).count()
    
     # Set the initial value of the "Action Date" field to today's date
     today_date = date.today()
@@ -821,6 +829,8 @@ def calculate_total_cycles_for_client(client):
         'cycle9': Bill.objects.filter(short_name=client).aggregate(Sum('cycle9'))['cycle9__sum'] or 0,
     }
 
+@login_required(login_url='account:login')
+@user_passes_test(check_role_admin)
 def aging(request):
     clients = Client.objects.all()
     # Calculate the sum of amounts for each aging bucket
@@ -861,6 +871,7 @@ def aging(request):
 
     return render(request, 'aging.html', context)
 
+@login_required(login_url='account:login')
 def delete_action(request , action_id):
     action = get_object_or_404(Action, id=action_id)
     action.delete()
@@ -995,6 +1006,7 @@ def send_update_email(subject, message):
     
     mail.send()
 
+@login_required(login_url='account:login')
 def extend_action_dates(request, client_id):
     client = Client.objects.get(pk=client_id)
     actions = Action.objects.filter(short_name=client)
@@ -1025,6 +1037,8 @@ def extend_action_dates(request, client_id):
 
     return render(request, 'client_profile.html', context)
 
+@login_required(login_url='account:login')
+@user_passes_test(check_role_user)
 def myclient(request):
     user = request.user
     # Filter clients for the currently logged-in user

@@ -5,7 +5,7 @@ from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required, user_passes_test
 from datetime import timedelta
 from sales.views import calculate_percentages, calculate_total_cycles_for_client
-from .utils import detectUser
+from .utils import check_role_admin, check_role_user, detectUser
 from django.core.exceptions import PermissionDenied
 from django.utils.http import urlsafe_base64_decode
 from .models import User
@@ -20,20 +20,6 @@ from datetime import datetime, timedelta, date
 # Create your views here.
 
 
-# Restrict the vendor from accessing the customer page
-def check_role_admin(user):
-    if user.role == 1:
-        return True
-    else:
-        raise PermissionDenied
-
-
-# Restrict the customer from accessing the vendor page
-def check_role_user(user):
-    if user.role == 2:
-        return True
-    else:
-        raise PermissionDenied
 
 def login(request):
     if request.user.is_authenticated:
@@ -59,6 +45,7 @@ def login(request):
 
 
 #Logout
+
 def logout(request):
    auth.logout(request)
    messages.info(request, 'You are logged out.')
@@ -120,7 +107,8 @@ def userdashboard(request):
     grand_total_balance = bills.aggregate(Sum('balance'))['balance__sum'] or 0
 
     # Check if there are clients associated with the logged-in user
-    if clients.exists():
+    if clients.exists() and bills.exists():
+
         # Calculate percentages based on grand total balance
         percentages = calculate_percentages(aging_data, grand_total_balance)
     else:

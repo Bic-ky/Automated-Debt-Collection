@@ -6,6 +6,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from django.conf import settings
 from .models import User
+from django.core.exceptions import PermissionDenied
 
 def detectUser(user):
     if user.role == User.ADMIN:
@@ -34,3 +35,19 @@ def send_verification_email(request, user, mail_subject, email_template):
     mail = EmailMessage(mail_subject, message, from_email, to=[to_email])
     mail.content_subtype = "html"
     mail.send()
+
+
+# Restrict the vendor from accessing the customer page
+def check_role_admin(user):
+    if user.role == 1:
+        return True
+    else:
+        raise PermissionDenied
+
+
+# Restrict the customer from accessing the vendor page
+def check_role_user(user):
+    if user.role == 2:
+        return True
+    else:
+        raise PermissionDenied
