@@ -6,7 +6,7 @@ from import_export.admin import ImportExportActionModelAdmin
 class ClientData(ImportExportActionModelAdmin):
     list_display = ['short_name', 'account_name', 'balance', 'phone_number', 'collector']
     list_editable = ['collector']  
-    search_fields = ['short_name', 'account_name']
+    search_fields = ['short_name', 'account_name', 'collector__full_name']
 
 @admin.register(Bill)
 class BillData(ImportExportActionModelAdmin):
