@@ -152,6 +152,10 @@
                                 <li>
                                     <a href="{% url "aging" %}" class="waves-effect"><i class="mdi mdi-chart-bar"></i><span>Aging Report</span></a>
                                 </li>
+                                <li>
+                                <a class="waves-effect" href="{% url 'account:admin_change_password' %}"><i class="mdi mdi-security"></i><span>Change Password</span>
+                                </a>
+                                </li>
                             {% elif user.role == user.USER %}
                                 <li>
                                     <a href="{% url "account:userdashboard" %}" class="waves-effect"><i class="mdi mdi-home-analytics"></i><span>Dashboard</span></a>
@@ -163,6 +167,10 @@
                                 <li>
                                     <a href="{% url "myclient" %}" class="waves-effect"><i class="feather-user"></i><span>Client</span></a>
                                 </li>
+                                <li>
+                                    <a class="waves-effect" href="{% url 'account:user_change_password' %}"><i class="mdi mdi-security"></i><span>Change Password</span>
+                                    </a>
+                                    </li>
                             {% endif %}
 
                         </ul>

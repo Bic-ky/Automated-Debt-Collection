@@ -8,7 +8,7 @@ defusedxml==0.7.1
 diff-match-patch==20230430
 Django==4.2.7
 django-filter==23.5
-django-import-export==3.3.3
+django-import-export==3.3.3     
 et-xmlfile==1.1.0
 executing==2.0.1
 idna==3.6

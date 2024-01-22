@@ -17,6 +17,8 @@ import json
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import datetime, timedelta, date
+from django.contrib.auth import update_session_auth_hash
+from .forms import CustomPasswordChangeForm
 # Create your views here.
 
 
@@ -52,14 +54,14 @@ def logout(request):
    return redirect('login')
 
 #Dashboard Assign
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 def myAccount(request):
     user = request.user
     redirectUrl = detectUser(user)
     return redirect(redirectUrl)
 
 #userdashboard
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 @user_passes_test(check_role_user)
 def userdashboard(request):
     # Retrieve the logged-in user
@@ -303,6 +305,35 @@ def reset_password(request):
     return render(request, 'reset_password.html')
 
 
+@login_required
+def user_change_password(request):
+    if request.method == 'POST':
+        form = CustomPasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Update session
+            messages.success(
+                request, 'Your password was successfully updated!')
+            logout(request)  # Log out the user
+            return redirect('account:userdashboard')
+    else:
+        # Pass user=request.user to initialize the form with the user's data
+        form = CustomPasswordChangeForm(user=request.user)
+    return render(request, 'change_password.html', {'form': form})
 
-    
-    
+
+@login_required
+def admin_change_password(request):
+    if request.method == 'POST':
+        form = CustomPasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Update session
+            messages.success(
+                request, 'Your password was successfully updated!')
+            logout(request)  # Log out the user
+            return redirect('account:admindashboard')
+    else:
+        # Pass user=request.user to initialize the form with the user's data
+        form = CustomPasswordChangeForm(user=request.user)
+    return render(request, 'change_password.html', {'form': form})
