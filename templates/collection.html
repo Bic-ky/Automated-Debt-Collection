@@ -267,7 +267,7 @@
                   <label>Action Type</label>
                   <br/>
                   <div class="col mt-1">
-                      <div class="btn-group btn-group-toggle waves-effect waves-light bg-color-primary" data-toggle="buttons">
+                      <div class="btn-group btn-group-toggle waves-effect waves-light bg-color-primary" >
                           <label class="btn btn-danger {% if add_form.action_type.value == 'Email' %}active{% endif %}">
                               <input type="radio"  class="btn btn-secondary waves-effect waves-light" data-toggle="tooltip" data-placement="bottom" title="Selected" name="{{ add_form.action_type.name }}" value="Email" {% if add_form.action_type.value == 'Email' %}checked{% endif %}/>
                               <i class="mdi mdi-gmail"></i> Email
@@ -302,10 +302,10 @@
                 <label>Follow Up</label>
                 {{ add_form.followup_date }}
                 <br>
-                  <div class="form-group mb-0">
+                  {% comment %} <div class="form-group mb-0">
                     <label>Completed:</label>
                     <input type="checkbox" data-toggle="switchery"  id="completedCheckbox" name="completed" value="on" {% if add_form.completed.value %}checked{% endif %}/>
-                  </div>
+                  </div> {% endcomment %}
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary waves-effect waves-light" data-dismiss="modal">Close</button>
                     <button type="submit" name="add_action" class="btn btn-warning waves-effect waves-light">Update Action</button>

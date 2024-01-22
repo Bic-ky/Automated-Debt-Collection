@@ -349,10 +349,7 @@ def collection(request):
             completed=request.POST.get('completed')
             if followup_date=='':
                 followup_date=None
-            if completed =='on':
-               completed=True
-            else:
-                completed=False
+            
             # Validate that required fields are present
             if not (action_type ):
                 messages.error(request, 'Action type is  required')
@@ -381,7 +378,7 @@ def collection(request):
                 followup_date=followup_date,
                 description=description,
                 subtype=subtype,
-                completed=completed,
+                completed=True,
             )
             action_instance.save()
 
@@ -900,7 +897,6 @@ def delete_actions():
     )
     # Delete the selected actions
     actions_to_delete.delete()
-
 
 def calculate_total_balance_for_all_collectors():
     today = date.today()
