@@ -864,7 +864,7 @@ def aging(request):
         'cycle8': Bill.objects.aggregate(Sum('cycle8'))['cycle8__sum'] or 0,
         'cycle9': Bill.objects.aggregate(Sum('cycle9'))['cycle9__sum'] or 0,
     }
-
+    rounded_aging_data = {key: round(value, 2) for key, value in aging_data.items()}
     # Calculate the total sum of all bills
     total_sum = sum(aging_data.values())
     # Calculate the grand total sum of all bills' balance
@@ -875,6 +875,7 @@ def aging(request):
 
     context = {
         'aging_data': aging_data,
+        'rounded_aging_data': rounded_aging_data,
         'total_sum': total_sum,
         'grand_total_balance': grand_total_balance,
         'percentages': percentages,

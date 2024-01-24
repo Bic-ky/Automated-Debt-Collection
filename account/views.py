@@ -183,11 +183,17 @@ def admindashboard(request):
         collector = client.collector
         if collector:
             total_due = Bill.objects.filter(short_name=client).aggregate(Sum('balance'))['balance__sum'] or 0
+            rounded_total_due = round(total_due, 2)  # Round the total_due to 2 decimal places
             if collector.user_name in collector_data:
-                collector_data[collector.user_name] += total_due
+                collector_data[collector.user_name] += rounded_total_due
             else:
-                collector_data[collector.user_name] = total_due
-    
+                collector_data[collector.user_name] = rounded_total_due
+
+    rounded_collector_data = {key: round(value, 2) for key, value in collector_data.items()}
+
+    # Update collector_data with values from rounded_collector_data
+    collector_data.update(rounded_collector_data)
+
     # Calculate the date 15 days ago
     fifteen_days_ago = timezone.now() - timedelta(days=15)
 
