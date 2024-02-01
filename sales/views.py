@@ -32,7 +32,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from account.utils import check_role_admin, check_role_user
 
 # Create your views here.
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 def profile(request):
     return render(request , 'profile.html')
 
@@ -64,7 +64,7 @@ def convert_nepali_to_ad(nepali_date):
         print(f"Error converting Nepali date: {e}")
         return None  # or return the original value if conversion fails
 
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 @user_passes_test(check_role_admin)
 def upload_excel(request):
     success_messages = []
@@ -263,12 +263,7 @@ def upload_excel(request):
                         update_client_balance(client)
                         overdue120d(client)
                         create_actions_for_bill(new_bill)
-                        
-
-                
-                        
-
-                                                   
+                                   
                     except Client.DoesNotExist:
                         error_messages.append(f'Client "{short_name_value}" not found at row {index + 2}\n')
                     except ValidationError as e:
@@ -319,7 +314,7 @@ def upload_excel(request):
 
     return render(request, 'upload.html', context)
 
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 @user_passes_test(check_role_user)
 def collection(request):
      # Filter clients for the currently logged-in user
@@ -450,13 +445,13 @@ def update_client_balance(client):
     
     client.save()
 
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 @user_passes_test(check_role_admin)
 def client(request):
     clients = Client.objects.all()
     return render(request , 'client.html' ,  {'clients': clients})
 
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 def client_profile(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     actions = Action.objects.filter(short_name=client).order_by('-created')
@@ -544,7 +539,7 @@ def client_profile(request, client_id):
 
     return render(request, 'client_profile.html', context)
 
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 def edit_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
 
@@ -558,14 +553,14 @@ def edit_client(request, client_id):
 
     return render(request, 'edit_client.html', {'form': form, 'client': client})
 
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 def delete_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     client.delete()
     messages.success(request, 'Client has been deleted successfully!')
     return redirect('client')
 
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 def add_client(request):
     if request.method == 'POST':
         form = ClientForm(request.POST)
@@ -779,7 +774,7 @@ def generate_sms_text(subtype, client):
     context = Context({'client': client, 'agent_name': agent_name, 'contact_number': contact_number})
     return template.render(context)
 
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 def action(request):
     clients = Client.objects.all()
     actions = Action.objects.all().order_by('-created')
@@ -813,36 +808,20 @@ def action(request):
    
     return render(request, 'action.html' , context)
 
-from django.db.models import Sum
-
 def calculate_total_cycles_for_client(client):
-    total_cycles = Bill.objects.filter(short_name=client).aggregate(
-        cycle1_sum=Sum('cycle1'),
-        cycle2_sum=Sum('cycle2'),
-        cycle3_sum=Sum('cycle3'),
-        cycle4_sum=Sum('cycle4'),
-        cycle5_sum=Sum('cycle5'),
-        cycle6_sum=Sum('cycle6'),
-        cycle7_sum=Sum('cycle7'),
-        cycle8_sum=Sum('cycle8'),
-        cycle9_sum=Sum('cycle9'),
-    )
-
     return {
-        'cycle1': total_cycles['cycle1_sum'] or 0,
-        'cycle2': total_cycles['cycle2_sum'] or 0,
-        'cycle3': total_cycles['cycle3_sum'] or 0,
-        'cycle4': total_cycles['cycle4_sum'] or 0,
-        'cycle5': total_cycles['cycle5_sum'] or 0,
-        'cycle6': total_cycles['cycle6_sum'] or 0,
-        'cycle7': total_cycles['cycle7_sum'] or 0,
-        'cycle8': total_cycles['cycle8_sum'] or 0,
-        'cycle9': total_cycles['cycle9_sum'] or 0,
+        'cycle1': Bill.objects.filter(short_name=client).aggregate(Sum('cycle1'))['cycle1__sum'] or 0,
+        'cycle2': Bill.objects.filter(short_name=client).aggregate(Sum('cycle2'))['cycle2__sum'] or 0,
+        'cycle3': Bill.objects.filter(short_name=client).aggregate(Sum('cycle3'))['cycle3__sum'] or 0,
+        'cycle4': Bill.objects.filter(short_name=client).aggregate(Sum('cycle4'))['cycle4__sum'] or 0,
+        'cycle5': Bill.objects.filter(short_name=client).aggregate(Sum('cycle5'))['cycle5__sum'] or 0,
+        'cycle6': Bill.objects.filter(short_name=client).aggregate(Sum('cycle6'))['cycle6__sum'] or 0,
+        'cycle7': Bill.objects.filter(short_name=client).aggregate(Sum('cycle7'))['cycle7__sum'] or 0,
+        'cycle8': Bill.objects.filter(short_name=client).aggregate(Sum('cycle8'))['cycle8__sum'] or 0,
+        'cycle9': Bill.objects.filter(short_name=client).aggregate(Sum('cycle9'))['cycle9__sum'] or 0,
     }
 
-
-
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 @user_passes_test(check_role_admin)
 def aging(request):
     clients = Client.objects.all()
@@ -885,7 +864,7 @@ def aging(request):
 
     return render(request, 'aging.html', context)
 
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 def delete_action(request , action_id):
     action = get_object_or_404(Action, id=action_id)
     action.delete()
@@ -1009,7 +988,7 @@ def send_update_email(subject, message):
     
     from_email = settings.DEFAULT_FROM_EMAIL
     
-    to_email = "manoj.thapa@janakitech.com"  
+    to_email = "adityachaudhary700@example.com"  
     
     # Create an EmailMessage with the subject, message, and sender/recipient information
     mail = EmailMessage(subject, message, from_email, to=[to_email])
@@ -1019,7 +998,7 @@ def send_update_email(subject, message):
     
     mail.send()
 
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 def extend_action_dates(request, client_id):
     client = Client.objects.get(pk=client_id)
     actions = Action.objects.filter(short_name=client)
@@ -1050,7 +1029,7 @@ def extend_action_dates(request, client_id):
 
     return render(request, 'client_profile.html', context)
 
-@login_required(login_url='account:login')
+@login_required(login_url='login')
 @user_passes_test(check_role_user)
 def myclient(request):
     user = request.user
