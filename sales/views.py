@@ -198,7 +198,15 @@ def upload_excel(request):
                 success_count = 0
                 
                 
+                # Identify and delete bills not present in the Excel file
+                existing_bills = Bill.objects.filter(
+                    short_name__in=clients.values('id')
+                )
+                bills_to_delete = existing_bills.exclude(bill_no__in=df['bill_no'].unique())
 
+                if bills_to_delete.exists():
+                    bills_to_delete.delete() 
+                     
                 for index, row in df.iterrows():
                     try:
                         short_name_value = row['short_name'].strip()
@@ -212,7 +220,7 @@ def upload_excel(request):
                             short_name=client,
                         ).first()
 
-
+                        
                         if existing_bill:
                             # Update existing Bill with new data
                             existing_bill.type = row['type']
@@ -988,7 +996,7 @@ def send_update_email(subject, message):
     
     from_email = settings.DEFAULT_FROM_EMAIL
     
-    to_email = "adityachaudhary700@example.com"  
+    to_email = "manoj.thapa@janakitech.com"  
     
     # Create an EmailMessage with the subject, message, and sender/recipient information
     mail = EmailMessage(subject, message, from_email, to=[to_email])

@@ -78,8 +78,6 @@ class SendSMSForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-
-       
         # Add form control to other fields if needed
         for field_name, field in self.fields.items():
             field.widget.attrs.update({'class': 'form-control'})
